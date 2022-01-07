@@ -1,10 +1,18 @@
+"""
+Module containing the class `Dimension`, and the container class `PredefinedDimensions`.
+Contains all functionalities for dimensional analysis and working with physical dimensions.
+"""
+
+# Standard library
 from __future__ import annotations
 from typing import Union, Sequence, Tuple
 from functools import partial
 from itertools import combinations
 
+# 3rd-party
 import numpy as np
 
+# Self
 from .data.dimensions_units import primary, derived
 from .helpers import parse_base_with_exp_string as parse_base_exp
 from .helpers import generate_symbol_for_base_exp_series as gen_symbol
@@ -13,7 +21,7 @@ from .helpers import raise_for_type
 
 class Dimension:
     """
-    Object representing a primary or derived physical dimension, allowing for dimensional analysis.
+    Object representing a (primary or derived) physical dimension, allowing for dimensional analysis.
 
     Parameters
     ----------
