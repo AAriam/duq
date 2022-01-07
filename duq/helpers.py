@@ -3,7 +3,7 @@ Helper functions used in other modules.
 """
 
 # Standard library
-from typing import Tuple, Union, Sequence
+from typing import Tuple, Union, Sequence, Type
 from fractions import Fraction
 
 # 3rd-party
@@ -155,7 +155,7 @@ def superscript_map_func(
 
 def raise_for_type(
         obj: object,
-        obj_type: type,
+        obj_type: Union[Type, Tuple[Type]],
         msg: str,
         error_type: type = NotImplementedError
 ) -> None:
