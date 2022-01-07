@@ -115,3 +115,57 @@ def raise_for_type(obj, obj_type, msg, error_type=NotImplementedError):
     if not isinstance(obj, obj_type):
         raise error_type(msg)
     return
+
+
+def order_for_repr(
+        arrays: Union[Sequence[Union[Sequence, np.ndarray]], np.ndarray],
+        cut_idx: int
+) -> list:
+    """
+    Re-order each sub-array (not in-place) in an array of arrays.
+    Each subarray is reordered based on priority of dimensions/units for
+    generating name and symbol representations.
+    The priority is set as follows:
+        1. Derived dimensions/units before primary dimensions/units
+        2. More complex derived dimensions/units before simpler ones
+        3. Primary dimensions/units in the conventional order
+    All arrays containing names, symbols etc. are already ordered in a way
+    that the primary dimensions/units are first (in the conventional order),
+    followed by derived dimensions/units, going from simple ones to more complex ones.
+    Thus, for reordering, only the index of the first derived dimension/unit is needed.
+
+    Parameters
+    ----------
+    arrays : Union[Sequence[Union[Sequence, np.ndarray]], np.ndarray]
+        An array containing the arrays to be ordered.
+    cut_idx : int
+        Index used to slice the array into two.
+        This should be the index of the first derived dimension/unit in the array.
+
+    Returns
+    -------
+    ordered_arrays : list
+        List of ordered arrays.
+
+    Examples
+    --------
+    ([[a,b,c,d,e,f]], 3) -> [[f,e,d,a,b,c]]
+    """
+
+    # Calculate indices of the reordered array
+    indices = np.arange(len(arrays[0]))
+    ordered_indices = np.concatenate(
+        (  # Take the derived dimensions and flip them
+            # since in the original database, derived dimensions
+            # go from simple to complex
+            indices[cut_idx:][::-1],
+            # Put the primary dimensions afterwards, but don't change
+            # the order within them, since it's already in the conventional order
+            indices[: cut_idx]
+        )
+    )
+    # Reorder arrays using the calculated index array.
+    ordered_arrays = []
+    for array in arrays:
+        ordered_arrays.append(array[ordered_indices])
+    return ordered_arrays
