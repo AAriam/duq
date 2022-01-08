@@ -10,6 +10,9 @@ from .helpers import raise_for_type
 from .data.physical_constants import phys_consts
 
 
+__all__ = ('Quantity', 'predefined')
+
+
 class Quantity:
     """
     An object representing a physical quantity, which has a value, a unit,
@@ -363,4 +366,4 @@ class PhysicalConstants:
 
 # Instantiate the container class,
 # this can now be directly imported whenever needed.
-constants = PhysicalConstants(phys_consts)
+predefined = PhysicalConstants(phys_consts)
