@@ -11,6 +11,9 @@ from .helpers import generate_symbol_for_base_exp_series as gen_symbol
 from .helpers import raise_for_type, order_for_repr
 
 
+__all__ = ('Unit', 'predefined')
+
+
 class Unit:
     """
     Object representing a physical unit, allowing for
