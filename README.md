@@ -1,6 +1,7 @@
 # Dimensions, Units, Quantities (DUQ)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/duq.svg)](https://pypi.org/project/duq/)
 [![Package Status](https://img.shields.io/pypi/status/duq.svg)](https://pypi.org/project/duq/)
+[![Downloads](https://pepy.tech/badge/duq)](https://pepy.tech/project/duq)
 [![License](https://img.shields.io/pypi/l/duq.svg)](https://github.com/Armin-Ariamajd/duq/blob/main/LICENSE)
 
 
