@@ -13,5 +13,13 @@ phys_consts = {
             "symbol": "k_e",
             "value": 8.9875517923e9,
             "unit": "N.m^2.C^-2"
+        },
+
+    "boltzmann":
+        {
+            "name": "Boltzmann constant",
+            "symbol": "k_B",
+            "value": 1.380649e-32,
+            "unit": "J.K^-1"
         }
 }
