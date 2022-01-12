@@ -38,7 +38,7 @@ primary = {
                         },
                     "electron_mass":
                         {
-                            "name": "atomic unit of mass (a.u.)",
+                            "name": "atomic unit of mass (au)",
                             "symbol": "m_e",
                             "conv_factor": 9.1093837015e-31,
                             "prefix_exp": 0
@@ -69,7 +69,7 @@ primary = {
                         },
                     "bohr":
                         {
-                            "name": "bohr radius (a.u.)",
+                            "name": "bohr radius (au)",
                             "symbol": "a0",
                             "conv_factor": 5.29177210903e-11,
                             "prefix_exp": 0
@@ -296,7 +296,7 @@ derived = {
                         },
                     "elementary_charge":
                         {
-                            "name": "atomic unit of charge (a.u.)",
+                            "name": "atomic unit of charge (au)",
                             "symbol": "e",
                             "conv_factor": 1.602176634e-19,
                             "prefix_exp": 0,
