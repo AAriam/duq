@@ -260,7 +260,10 @@ class Quantity:
             self.normalize(inplace=True)
         return
 
-    def normalize(self, inplace: bool = False) -> Union[Quantity, None]:
+    def normalize(
+            self,
+            inplace: bool = False
+    ) -> Union[Quantity, None]:
         """
         Normalize the value, i.e. bring it to the range [1, 10),
         and add the resulting exponent to the unit.
@@ -292,7 +295,10 @@ class Quantity:
         else:
             return Quantity(new_value, new_unit)
 
-    def convert_unit_to_si(self, inplace: bool = False) -> Union[Quantity, None]:
+    def convert_unit_to_si(
+            self,
+            inplace: bool = False
+    ) -> Union[Quantity, None]:
         """
         Convert the quantity to SI units.
 
@@ -309,7 +315,11 @@ class Quantity:
         """
         return self._convert_unit(self.unit.convert_to_si, inplace)
 
-    def convert_unit(self, new_unit: Union[str, Unit], inplace: bool = False) -> Union[Quantity, None]:
+    def convert_unit(
+            self,
+            new_unit: Union[str, Unit],
+            inplace: bool = False
+    ) -> Union[Quantity, None]:
         """
         Convert the quantity to another unit.
 
@@ -328,7 +338,11 @@ class Quantity:
         """
         return self._convert_unit(self.unit.convert_to(new_unit), inplace)
 
-    def _convert_unit(self, conversion_results: Tuple[float, float, Unit], inplace: bool):
+    def _convert_unit(
+            self,
+            conversion_results: Tuple[float, float, Unit],
+            inplace: bool
+    ) -> Union[Quantity, None]:
         """
         Base function used by both `convert_unit` and `convert_unit_to_si` functions.
         """
