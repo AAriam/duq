@@ -83,15 +83,7 @@ class Quantity:
         return f"Quantity(value={self.value}, unit={repr(self.unit)}, normalization={self.normalization})"
 
     def __str__(self):
-        # Transform value into string in scientific notation with 10 decimals
-        val_sci_not = '{:.10E}'.format(self.value)
-        # Separate mantissa and exponent
-        mantissa, exp = val_sci_not.split('E')
-        # Strip mantissa of trailing zeros
-        zero_stripped_mantissa = mantissa.rstrip('0').rstrip('.')
-        # Reformat into scientific notation string, by adding 'E' and exponent at the end
-        zero_stripped_val_sci_not = zero_stripped_mantissa + 'E' + exp
-        return f"{zero_stripped_val_sci_not} {self.unit.symbol_as_is}\n\n{str(self.unit)}"
+        return f"{self.str_repr_short}\n\n{str(self.unit)}"
 
     def __eq__(self, other: Quantity):
         raise_for_type(other, Quantity, "Equality can only be assessed between two `Quantity` objects.")
@@ -204,6 +196,18 @@ class Quantity:
         if self.normalization:
             self.normalize()
         return self
+
+    @property
+    def str_repr_short(self):
+        # Transform value into string in scientific notation with 10 decimals
+        val_sci_not = '{:.10E}'.format(self.value)
+        # Separate mantissa and exponent
+        mantissa, exp = val_sci_not.split('E')
+        # Strip mantissa of trailing zeros
+        zero_stripped_mantissa = mantissa.rstrip('0').rstrip('.')
+        # Reformat into scientific notation string, by adding 'E' and exponent at the end
+        zero_stripped_val_sci_not = zero_stripped_mantissa + 'E' + exp
+        return f"{zero_stripped_val_sci_not} {self.unit.symbol_as_is}"
 
     @property
     def value(self) -> Union[int, float, np.number]:
