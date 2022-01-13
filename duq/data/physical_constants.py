@@ -1,5 +1,5 @@
 phys_consts = {
-    "avogadro":
+    "avogadro_const":
         {
             "name": "Avogadro constant",
             "symbol": "N_A",
@@ -7,7 +7,7 @@ phys_consts = {
             "unit": "mol^-1"
         },
 
-    "coulomb":
+    "coulomb_const":
         {
             "name": "Coulomb constant",
             "symbol": "k_e",
@@ -15,7 +15,7 @@ phys_consts = {
             "unit": "N.m^2.C^-2"
         },
 
-    "rydberg":
+    "rydberg_const":
         {
             "name": "Rydberg constant",
             "symbol": "R_∞",
@@ -23,7 +23,7 @@ phys_consts = {
             "unit": "m^-1"
         },
 
-    "boltzmann":
+    "boltzmann_const":
         {
             "name": "Boltzmann constant",
             "symbol": "k_B",
@@ -39,7 +39,7 @@ phys_consts = {
             "unit": "m.s^-1"
         },
 
-    "planck":
+    "planck_const":
         {
             "name": "Planck constant",
             "symbol": "h",
@@ -55,7 +55,7 @@ phys_consts = {
             "unit": "C"
         },
 
-    "gravitational_constant":
+    "gravitational_const":
         {
             "name": "gravitational constant",
             "symbol": "G",

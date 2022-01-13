@@ -381,7 +381,7 @@ class Unit:
             raise ValueError("The current unit's dimension does not match with the target unit.")
         else:
             conv_shift_self, conv_factor_self = self.conversion_coefficients_to_si
-            conv_factor_self *= phys_consts["avogadro"]["value"] ** -n_factor
+            conv_factor_self *= phys_consts["avogadro_const"]["value"] ** -n_factor
             conv_shift_other, conv_factor_other = unit.conversion_coefficients_to_si
             conv_shift_total = conv_shift_self - conv_shift_other
             conv_factor_total = conv_factor_self / conv_factor_other
