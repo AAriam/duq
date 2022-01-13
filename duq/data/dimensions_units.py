@@ -417,19 +417,19 @@ for prefix in ["centi", "milli", "micro", "nano", "pico", "femto", "atto"]:
     pre = smaller_one[prefix]
     p_symb = pre['symbol']
     p_name = pre['name']
-    p_exp = pre["exp"]
+    p_factor = pre["factor"]
 
     # for length, from metre
     primary["length"]["units"][f"{p_name}metre"] = {
         "name": f"{p_name}metre",
         "symbol": f"{pre['symbol']}m",
-        "conv_factor": p_exp,
-        "prefix_exp": p_exp
+        "conv_factor": p_factor,
+        "prefix_exp": p_factor
     }
     # for time, from second
     primary["time"]["units"][f"{p_name}second"] = {
         "name": f"{p_name}second",
         "symbol": f"{p_symb}s",
-        "conv_factor": p_exp,
-        "prefix_exp": p_exp
+        "conv_factor": p_factor,
+        "prefix_exp": p_factor
     }
