@@ -225,6 +225,14 @@ derived = {
                             "symbol": "m^3",
                             "conv_factor": 1,
                             "prefix_exp": 0,
+                        },
+
+                    "litre":
+                        {
+                            "name": "litre",
+                            "symbol": "l",
+                            "conv_factor": 1e-3,
+                            "prefix_exp": 0,
                         }
                 }
         },
