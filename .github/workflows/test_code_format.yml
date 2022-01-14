@@ -1,5 +1,5 @@
 
-name: formatting tests
+name: code-style tests
 
 on:
   push:
