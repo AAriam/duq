@@ -17,11 +17,13 @@ jobs:
           - uses: actions/checkout@v2
           - uses: actions/setup-python@v2
           - name: Install format dependencies
-          - run: python -m pip install black-nb shyaml
-          - run: Python -m pip install black
+            run: |
+              python -m pip install black-nb shyaml
+              Python -m pip install black
           - name: Run black
-          - run: black --check .
+            run: |
+              black --check .
           - name: Run black-nb
-          - run: |
+            run: |
               black-nb --check .
           
