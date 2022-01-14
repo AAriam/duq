@@ -52,4 +52,4 @@ jobs:
         run: python -m pip install black-nb shyaml
       - name: Run black-nb
         run: |
-          black-nb -l 99 --check
+          black-nb -l 99 --check duq
