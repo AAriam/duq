@@ -20,4 +20,4 @@ pip install duq
 ```
 
 ## Manual
-See the [provided Jupyter notebooks](https://github.com/Armin-Ariamajd/duq/tree/main/docs) for demonstration of the core functionalities.
+See the [provided Jupyter notebooks](https://github.com/Armin-Ariamajd/duq/tree/main/docs/demos_jupyter_notebook) for demonstration of the core functionalities.
