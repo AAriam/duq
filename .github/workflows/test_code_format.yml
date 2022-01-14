@@ -22,6 +22,6 @@ jobs:
           - name: Run black
           - run: black --check .
           - name: Run black-nb
-            run: |
+          - run: |
               black-nb --check .
           
