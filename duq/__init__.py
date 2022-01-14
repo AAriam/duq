@@ -4,5 +4,3 @@ from .unit import Unit
 from .unit import predefined as predefined_units
 from .quantity import Quantity
 from .quantity import predefined as predefined_constants
-
-

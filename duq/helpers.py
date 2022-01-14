@@ -13,9 +13,7 @@ import numpy as np
 from .data.unicode_chars import superscript_chars
 
 
-def parse_base_with_exp_string(
-        string: str
-) -> Tuple[np.ndarray, np.ndarray]:
+def parse_base_with_exp_string(string: str) -> Tuple[np.ndarray, np.ndarray]:
     """
     Parse a string representation of a collection of bases and exponents,
     seperated from each other by a '.' symbol. Each base may be followed
@@ -51,7 +49,9 @@ def parse_base_with_exp_string(
         elif len_term == 2:
             exps.append(float(Fraction(base_and_exp[1])))
         else:
-            raise ValueError("Only one '^' symbol may appear for each term (i.e. between two '.' symbols).")
+            raise ValueError(
+                "Only one '^' symbol may appear for each term (i.e. between two '.' symbols)."
+            )
         bases.append(base_and_exp[0])
     bases = np.array(bases)
     exps = np.array(exps)
@@ -59,9 +59,7 @@ def parse_base_with_exp_string(
 
 
 def generate_symbol_for_base_exp_series(
-        base_array: np.ndarray,
-        exp_array: np.ndarray,
-        seperator: str = ""
+    base_array: np.ndarray, exp_array: np.ndarray, seperator: str = ""
 ) -> str:
     """
     Take two arrays representing the bases and exponents of an expression,
@@ -87,14 +85,14 @@ def generate_symbol_for_base_exp_series(
     nonzero_exp_mask = exp_array != 0
     nonzero_exps = exp_array[nonzero_exp_mask]
     bases_of_nonzero_exps = base_array[nonzero_exp_mask]
-    pretty_string_representation = pretty_print_base_with_exp_series(bases_of_nonzero_exps, nonzero_exps, seperator)
+    pretty_string_representation = pretty_print_base_with_exp_series(
+        bases_of_nonzero_exps, nonzero_exps, seperator
+    )
     return pretty_string_representation
 
 
 def pretty_print_base_with_exp_series(
-        base_array: Sequence,
-        exp_array: Sequence,
-        seperator: str = ""
+    base_array: Sequence, exp_array: Sequence, seperator: str = ""
 ) -> str:
     """
     Create a string representation of a collection of bases and their corresponding exponents,
@@ -124,7 +122,9 @@ def pretty_print_base_with_exp_series(
     for idx, base in enumerate(base_array):
         if "." in base or "^" in base:
             base_array_, exp_array_ = parse_base_with_exp_string(base)
-            base_array[idx] = f"({pretty_print_base_with_exp_series(base_array_, exp_array_, '.')})"
+            base_array[
+                idx
+            ] = f"({pretty_print_base_with_exp_series(base_array_, exp_array_, '.')})"
 
     exp_array = np.array(exp_array)
     if base_array.size == 0:
@@ -133,14 +133,16 @@ def pretty_print_base_with_exp_series(
         seperator_array = np.full(exp_array.size, seperator)
         seperator_array[-1] = ""
         superscripted_exps = np.array(list(map(superscript_map_func, exp_array)))
-        superscripted_exps_with_seperator = np.core.defchararray.add(superscripted_exps, seperator_array)
-        full_expression_array = np.core.defchararray.add(base_array, superscripted_exps_with_seperator)
+        superscripted_exps_with_seperator = np.core.defchararray.add(
+            superscripted_exps, seperator_array
+        )
+        full_expression_array = np.core.defchararray.add(
+            base_array, superscripted_exps_with_seperator
+        )
         return "".join(full_expression_array)
 
 
-def superscript_map_func(
-        exp: Union[int, float]
-) -> str:
+def superscript_map_func(exp: Union[int, float]) -> str:
     """
     Turn a number into its superscript string form.
     """
@@ -154,10 +156,10 @@ def superscript_map_func(
 
 
 def raise_for_type(
-        obj: object,
-        obj_type: Union[Type, Tuple[Type]],
-        msg: str,
-        error_type: type = NotImplementedError
+    obj: object,
+    obj_type: Union[Type, Tuple[Type]],
+    msg: str,
+    error_type: type = NotImplementedError,
 ) -> None:
     """
     Check an object's type and raise a specific error with a given message
@@ -184,8 +186,7 @@ def raise_for_type(
 
 
 def order_for_repr(
-        arrays: Union[Sequence[Union[Sequence, np.ndarray]], np.ndarray],
-        cut_idx: int
+    arrays: Union[Sequence[Union[Sequence, np.ndarray]], np.ndarray], cut_idx: int
 ) -> list:
     """
     Re-order each sub-array (not in-place) in an array of arrays.
@@ -227,7 +228,7 @@ def order_for_repr(
             indices[cut_idx:][::-1],
             # Put the primary dimensions afterwards, but don't change
             # the order within them, since it's already in the conventional order
-            indices[: cut_idx]
+            indices[:cut_idx],
         )
     )
     # Reorder arrays using the calculated index array.

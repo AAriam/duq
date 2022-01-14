@@ -19,7 +19,7 @@ from .helpers import generate_symbol_for_base_exp_series as gen_symbol
 from .helpers import raise_for_type, order_for_repr
 
 
-__all__ = ('Dimension', 'predefined')
+__all__ = ("Dimension", "predefined")
 
 
 class Dimension:
@@ -53,12 +53,18 @@ class Dimension:
     """
 
     # Initialize class attributes
-    _prim_dim_count: int = len(primary.keys())  # = 7, unless there is fundamental changes in physics.
+    _prim_dim_count: int = len(
+        primary.keys()
+    )  # = 7, unless there is fundamental changes in physics.
     _db_all: dict = primary | derived
     _db_names: np.ndarray = np.array([dim["name"] for dim in _db_all.values()])
     _db_symbols: np.ndarray = np.array([dim["symbol"] for dim in _db_all.values()])
-    _db_si_units: np.ndarray = np.array([list(dim["units"].values())[0]["symbol"] for dim in _db_all.values()])
-    _db_prim_exps: np.ndarray = np.array([dim["prim_dim_exps"] for dim in _db_all.values()])
+    _db_si_units: np.ndarray = np.array(
+        [list(dim["units"].values())[0]["symbol"] for dim in _db_all.values()]
+    )
+    _db_prim_exps: np.ndarray = np.array(
+        [dim["prim_dim_exps"] for dim in _db_all.values()]
+    )
 
     @classmethod
     def supported_input_dimensions(cls) -> Tuple:
@@ -66,7 +72,12 @@ class Dimension:
         Returns a tuple of names and symbols of supported dimensions
         available for constructing a Dimension object.
         """
-        return tuple([(name, symbol) for name, symbol in zip(Dimension._db_names, Dimension._db_symbols)])
+        return tuple(
+            [
+                (name, symbol)
+                for name, symbol in zip(Dimension._db_names, Dimension._db_symbols)
+            ]
+        )
 
     @classmethod
     def from_prim_dim_decomposition(cls, prim_dims_exps) -> Dimension:
@@ -86,7 +97,7 @@ class Dimension:
             Dimension
         """
         all_dims_exps = np.zeros(cls._db_names.size)
-        all_dims_exps[:cls._prim_dim_count] = prim_dims_exps
+        all_dims_exps[: cls._prim_dim_count] = prim_dims_exps
         return cls(all_dims_exps)
 
     def __init__(self, dimension):
@@ -105,13 +116,21 @@ class Dimension:
         elif isinstance(dimension, (list, np.ndarray)):
             all_dims_exps = np.array(dimension)
             if all_dims_exps.shape != self._all_dims_exps.shape:
-                raise ValueError(f"`dimension` array should have a shape of {self._all_dims_exps.shape}.")
-            elif all_dims_exps.dtype.kind not in (np.typecodes["AllInteger"] + np.typecodes["AllFloat"]):
-                raise ValueError("All elements of the `dimension` array must be numbers.")
+                raise ValueError(
+                    f"`dimension` array should have a shape of {self._all_dims_exps.shape}."
+                )
+            elif all_dims_exps.dtype.kind not in (
+                np.typecodes["AllInteger"] + np.typecodes["AllFloat"]
+            ):
+                raise ValueError(
+                    "All elements of the `dimension` array must be numbers."
+                )
             else:
                 self._all_dims_exps[...] = all_dims_exps
         else:
-            raise ValueError("Argument of `dimension` should either be a string or array-like of numbers.")
+            raise ValueError(
+                "Argument of `dimension` should either be a string or array-like of numbers."
+            )
 
     def __repr__(self):
         return f"Dimension({repr(list(self._all_dims_exps))})"
@@ -127,11 +146,22 @@ class Dimension:
         return str_repr
 
     def __eq__(self, other):
-        raise_for_type(other, Dimension, "Equality can only be assessed between two Dimension objects.")
-        return np.all(self.exponents_primary_decomposition == other.exponents_primary_decomposition)
+        raise_for_type(
+            other,
+            Dimension,
+            "Equality can only be assessed between two Dimension objects.",
+        )
+        return np.all(
+            self.exponents_primary_decomposition
+            == other.exponents_primary_decomposition
+        )
 
     def __mul_common__(self, other):
-        raise_for_type(other, Dimension, "Multiplication is only defined between two Dimension objects.")
+        raise_for_type(
+            other,
+            Dimension,
+            "Multiplication is only defined between two Dimension objects.",
+        )
         return self._all_dims_exps + other._all_dims_exps
 
     def __mul__(self, other):
@@ -142,7 +172,9 @@ class Dimension:
         return self
 
     def __truediv_common__(self, other):
-        raise_for_type(other, Dimension, "Division is only defined between two Dimension objects.")
+        raise_for_type(
+            other, Dimension, "Division is only defined between two Dimension objects."
+        )
         return self._all_dims_exps - other._all_dims_exps
 
     def __truediv__(self, other):
@@ -153,7 +185,9 @@ class Dimension:
         return self
 
     def __pow_common__(self, power):
-        raise_for_type(power, (int, float), "Exponentiation is only defined for a number.")
+        raise_for_type(
+            power, (int, float), "Exponentiation is only defined for a number."
+        )
         return self._all_dims_exps * power
 
     def __pow__(self, power):
@@ -168,8 +202,12 @@ class Dimension:
         """
         Name representation of the current dimension, with not simplification applied.
         """
-        names_ordered, exps_ordered = order_for_repr([self._db_names, self._all_dims_exps], self._prim_dim_count)
-        return gen_symbol(names_ordered, exps_ordered, " . ").replace("empty", "dimensionless")
+        names_ordered, exps_ordered = order_for_repr(
+            [self._db_names, self._all_dims_exps], self._prim_dim_count
+        )
+        return gen_symbol(names_ordered, exps_ordered, " . ").replace(
+            "empty", "dimensionless"
+        )
 
     @property
     def name_shortest_composition(self) -> str:
@@ -190,7 +228,9 @@ class Dimension:
         """
         Symbol representation of the current dimension, with not simplification applied.
         """
-        symbols_ordered, exps_ordered = order_for_repr([self._db_symbols, self._all_dims_exps], self._prim_dim_count)
+        symbols_ordered, exps_ordered = order_for_repr(
+            [self._db_symbols, self._all_dims_exps], self._prim_dim_count
+        )
         return gen_symbol(symbols_ordered, exps_ordered).replace("empty", "1")
 
     @property
@@ -212,7 +252,9 @@ class Dimension:
         """
         SI-unit representation of the current dimension, with not simplification applied.
         """
-        si_units_ordered, exps_ordered = order_for_repr([self._db_si_units, self._all_dims_exps], self._prim_dim_count)
+        si_units_ordered, exps_ordered = order_for_repr(
+            [self._db_si_units, self._all_dims_exps], self._prim_dim_count
+        )
         return gen_symbol(si_units_ordered, exps_ordered, ".").replace("empty", "1")
 
     @property
@@ -252,7 +294,9 @@ class Dimension:
         Array of exponents of the primary dimension decomposition of the current dimension, in the order:
         [mass, length, time, electric current, temperature, amount of substance, luminous intensity].
         """
-        return self.equiv_dim_primary_decomposition.exponents_as_is[:self._prim_dim_count]
+        return self.equiv_dim_primary_decomposition.exponents_as_is[
+            : self._prim_dim_count
+        ]
 
     @property
     def is_primary_dimension(self) -> bool:
@@ -302,7 +346,9 @@ class Dimension:
             # (i.e. multiplying with another exponent), then -1 should be added as the exponent.
             # This is inferred from the index of the best result, i.e. finding out if it was in the first
             # or second half of the concatenated list.
-            new_dim_dec[best_result_dim_idx] += (1 if best_result_idx < self._all_dims_exps.size else -1)
+            new_dim_dec[best_result_dim_idx] += (
+                1 if best_result_idx < self._all_dims_exps.size else -1
+            )
             # Update the current state
             current_prim_dim_dec = sub_add[best_result_idx]
             sum_current_prim_dim_exps = np.abs(current_prim_dim_dec).sum()
@@ -321,7 +367,9 @@ class Dimension:
             A new `Dimension` object with the same primary dimension decomposition
             as the current dimension, but composed only of primary dimensions.
         """
-        each_prim_dim_decomposition = (self._all_dims_exps.reshape(-1, 1) * self._db_prim_exps)
+        each_prim_dim_decomposition = (
+            self._all_dims_exps.reshape(-1, 1) * self._db_prim_exps
+        )
         total_prim_dim_decomposition = each_prim_dim_decomposition.sum(axis=0)
         return Dimension.from_prim_dim_decomposition(total_prim_dim_decomposition)
 
@@ -349,7 +397,9 @@ class Dimension:
         # s is the number of available dimensions in the class database (e.g. size of self._db_names),
         # and n is the number of primary dimensions, i.e. 7.
         # With the current number of available dimensions (19), the shape will be (50388, 7).
-        combs = np.array(list(combinations(range(self._db_names.size), self._prim_dim_count)))
+        combs = np.array(
+            list(combinations(range(self._db_names.size), self._prim_dim_count))
+        )
 
         solutions = []
         # Iterate over all combinations
@@ -358,9 +408,9 @@ class Dimension:
                 # Create a matrix of primary dimension decomposition exponents of 7 available dimensions,
                 # transpose the matrix and solve the system of linear equations to get the exponents of those
                 # 7 dimensions that result in the current dimension.
-                solution = (
-                    np.linalg.solve(
-                        self._db_prim_exps[dim_idxs].T, self.exponents_primary_decomposition))
+                solution = np.linalg.solve(
+                    self._db_prim_exps[dim_idxs].T, self.exponents_primary_decomposition
+                )
                 # Create an empty array for storing exponents of all available dimensions
                 all_dims_exps = np.zeros(self._db_names.size)
                 # Assign the solution (i.e. exponents) to the indices corresponding to those dimensions
@@ -374,18 +424,14 @@ class Dimension:
         solutions = np.array(solutions)
         int_sols = np.unique(
             solutions[
-                np.all(solutions == solutions.astype(int), axis=1) *
-                np.all(np.abs(solutions) < max_exp, axis=1)
+                np.all(solutions == solutions.astype(int), axis=1)
+                * np.all(np.abs(solutions) < max_exp, axis=1)
             ],
-            axis=0
+            axis=0,
         )
         # Filter out the equivalent dimensions that are exactly the same as the current dimension
         int_sols_not_self = int_sols[
-            np.logical_not(
-                np.all(
-                    (int_sols == self.exponents_as_is), axis=1
-                )
-            )
+            np.logical_not(np.all((int_sols == self.exponents_as_is), axis=1))
         ]
         # Sort the dimensions from the lowest sum of exponents (absolute values) to highest.
         idx_mask = np.argsort(np.abs(int_sols_not_self).sum(axis=1))
@@ -410,12 +456,18 @@ class PredefinedDimensions:
     this class, which returns a new Dimension object for
     that dimension, each time it is called.
     """
+
     def __init__(self):
         def dim_gen(self, symbol):
             return Dimension(symbol)
+
         init_dict = primary | derived
         for name, data in init_dict.items():
-            setattr(PredefinedDimensions, name, property(partial(dim_gen, symbol=data["symbol"])))
+            setattr(
+                PredefinedDimensions,
+                name,
+                property(partial(dim_gen, symbol=data["symbol"])),
+            )
 
 
 # Instantiate the container class,

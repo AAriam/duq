@@ -1,4 +1,3 @@
-
 from duq.dimension import Dimension
 
 

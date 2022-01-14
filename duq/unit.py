@@ -11,7 +11,7 @@ from .helpers import generate_symbol_for_base_exp_series as gen_symbol
 from .helpers import raise_for_type, order_for_repr
 
 
-__all__ = ('Unit', 'predefined')
+__all__ = ("Unit", "predefined")
 
 
 class Unit:
@@ -56,22 +56,48 @@ class Unit:
     # Dictionary containing all units and dimensions info
     _db_all: dict = primary | derived
     # Name of units
-    _db_names = np.array([unit["name"] for dim in _db_all.values() for unit in dim["units"].values()])
+    _db_names = np.array(
+        [unit["name"] for dim in _db_all.values() for unit in dim["units"].values()]
+    )
     # Symbol of units
-    _db_symbols = np.array([unit["symbol"] for dim in _db_all.values() for unit in dim["units"].values()])
+    _db_symbols = np.array(
+        [unit["symbol"] for dim in _db_all.values() for unit in dim["units"].values()]
+    )
     # Conversion factor of units (to SI unit)
-    _db_conv_factors = np.array([unit["conv_factor"] for dim in _db_all.values() for unit in dim["units"].values()])
+    _db_conv_factors = np.array(
+        [
+            unit["conv_factor"]
+            for dim in _db_all.values()
+            for unit in dim["units"].values()
+        ]
+    )
     # Prefix exponent of each unit (e.g. for kg = 3, for g = 0)
-    _db_prefix_exp = np.array([unit["prefix_exp"] for dim in _db_all.values() for unit in dim["units"].values()])
+    _db_prefix_exp = np.array(
+        [
+            unit["prefix_exp"]
+            for dim in _db_all.values()
+            for unit in dim["units"].values()
+        ]
+    )
     # Number of available dimensions
     _dims_count: int = len(_db_all.keys())
     # Name of the dimension of each available unit
     # (each name is repeated as many times as there are units in that dim)
-    _db_dim_names = np.array([dim["name"] for dim in _db_all.values() for unit in dim["units"].values()])
+    _db_dim_names = np.array(
+        [dim["name"] for dim in _db_all.values() for unit in dim["units"].values()]
+    )
     # Index of the dimension of each available unit
     # (each index is repeated as many times as there are units in that dim)
-    _db_dims_idx = np.array([idx for idx, dim in enumerate(_db_all.values()) for unit in dim["units"].values()])
-    _, _db_si_units_idx, _db_dim_units_counts = np.unique(_db_dims_idx, return_index=True, return_counts=True)
+    _db_dims_idx = np.array(
+        [
+            idx
+            for idx, dim in enumerate(_db_all.values())
+            for unit in dim["units"].values()
+        ]
+    )
+    _, _db_si_units_idx, _db_dim_units_counts = np.unique(
+        _db_dims_idx, return_index=True, return_counts=True
+    )
     # Index of the SI unit for each unit (repeated as many times as there are units with the same SI unit)
     _db_si_units_idx_all = np.repeat(_db_si_units_idx, _db_dim_units_counts)
     del _
@@ -82,7 +108,9 @@ class Unit:
         Returns a tuple of names and symbols of supported units
         available for constructing a Unit object.
         """
-        return tuple([(name, symbol) for name, symbol in zip(cls._db_names, cls._db_symbols)])
+        return tuple(
+            [(name, symbol) for name, symbol in zip(cls._db_names, cls._db_symbols)]
+        )
 
     @classmethod
     def from_prim_unit_decomposition(cls, prim_units_exps) -> Unit:
@@ -102,7 +130,9 @@ class Unit:
             Unit
         """
         all_units_exps = np.zeros(cls._db_names.size)
-        all_units_exps[cls._db_si_units_idx[:Dimension._prim_dim_count]] = prim_units_exps
+        all_units_exps[
+            cls._db_si_units_idx[: Dimension._prim_dim_count]
+        ] = prim_units_exps
         return cls(all_units_exps)
 
     @classmethod
@@ -140,15 +170,23 @@ class Unit:
         elif isinstance(unit, (list, np.ndarray)):
             all_units_exps = np.array(unit)
             if all_units_exps.shape != self._db_symbols.shape:
-                raise ValueError(f"`unit` array should have a shape of {self._db_symbols.shape}")
-            elif all_units_exps.dtype.kind not in (np.typecodes["AllInteger"] + np.typecodes["AllFloat"]):
+                raise ValueError(
+                    f"`unit` array should have a shape of {self._db_symbols.shape}"
+                )
+            elif all_units_exps.dtype.kind not in (
+                np.typecodes["AllInteger"] + np.typecodes["AllFloat"]
+            ):
                 raise ValueError("All elements of the `unit` array must be numbers.")
             else:
                 self._all_units_exps[...] = all_units_exps
         elif isinstance(unit, Dimension):
-            raise ValueError("For instantiation using a `Dimension` object, use Unit.from_dimension_object.")
+            raise ValueError(
+                "For instantiation using a `Dimension` object, use Unit.from_dimension_object."
+            )
         else:
-            raise ValueError("Argument of `unit` should either be a string or array-like of numbers.")
+            raise ValueError(
+                "Argument of `unit` should either be a string or array-like of numbers."
+            )
         unit_dims = np.zeros(self._dims_count)
         np.add.at(unit_dims, self._db_dims_idx, self._all_units_exps)
         self._dimension = Dimension(unit_dims)
@@ -170,13 +208,22 @@ class Unit:
         return str_repr
 
     def __eq__(self, other):
-        raise_for_type(other, Unit, "Equality can only be assessed between two Unit objects.")
+        raise_for_type(
+            other, Unit, "Equality can only be assessed between two Unit objects."
+        )
         return (self.dimension == other.dimension) and (
-                np.all(np.isclose(self.conversion_coefficients_to_si, other.conversion_coefficients_to_si))
+            np.all(
+                np.isclose(
+                    self.conversion_coefficients_to_si,
+                    other.conversion_coefficients_to_si,
+                )
+            )
         )
 
     def __mul_common__(self, other):
-        raise_for_type(other, Unit, "Multiplication is only defined between two Unit objects.")
+        raise_for_type(
+            other, Unit, "Multiplication is only defined between two Unit objects."
+        )
         return self._all_units_exps + other._all_units_exps
 
     def __mul__(self, other):
@@ -188,7 +235,9 @@ class Unit:
         return self
 
     def __truediv_common__(self, other):
-        raise_for_type(other, Unit, "Division is only defined between two Unit objects.")
+        raise_for_type(
+            other, Unit, "Division is only defined between two Unit objects."
+        )
         return self._all_units_exps - other._all_units_exps
 
     def __truediv__(self, other):
@@ -200,7 +249,9 @@ class Unit:
         return self
 
     def __pow_common__(self, power):
-        raise_for_type(power, (int, float), "Exponentiation is only defined for a number.")
+        raise_for_type(
+            power, (int, float), "Exponentiation is only defined for a number."
+        )
         return self._all_units_exps * power
 
     def __pow__(self, power):
@@ -216,8 +267,12 @@ class Unit:
         """
         Name representation of the current unit, with not simplification applied.
         """
-        names_ordered, exps_ordered = order_for_repr([self._db_names, self._all_units_exps], self._prim_unit_count)
-        return gen_symbol(names_ordered, exps_ordered, " . ").replace("empty", "unitless")
+        names_ordered, exps_ordered = order_for_repr(
+            [self._db_names, self._all_units_exps], self._prim_unit_count
+        )
+        return gen_symbol(names_ordered, exps_ordered, " . ").replace(
+            "empty", "unitless"
+        )
 
     @property
     def name_si(self) -> str:
@@ -238,7 +293,9 @@ class Unit:
         """
         Symbol representation of the current unit, with not simplification applied.
         """
-        symbols_ordered, exps_ordered = order_for_repr([self._db_symbols, self._all_units_exps], self._prim_unit_count)
+        symbols_ordered, exps_ordered = order_for_repr(
+            [self._db_symbols, self._all_units_exps], self._prim_unit_count
+        )
         return gen_symbol(symbols_ordered, exps_ordered, ".").replace("empty", "1")
 
     @property
@@ -315,7 +372,7 @@ class Unit:
         """
         new_all_units_exps = np.zeros_like(self._all_units_exps)
         new_all_units_exps[
-            self._db_si_units_idx[:self.dimension._prim_dim_count]
+            self._db_si_units_idx[: self.dimension._prim_dim_count]
         ] = self.dimension.exponents_primary_decomposition
         return Unit(new_all_units_exps)
 
@@ -344,11 +401,16 @@ class Unit:
         # Thus we are only interested in temperature units with positive exponents
         positive_temp_unit_exps_idx = np.argwhere(temp_unit_exps > 0)
         positive_temp_unit_exps = temp_unit_exps[positive_temp_unit_exps_idx]
-        positive_temp_unit_conv_factors = temp_unit_conv_shift[positive_temp_unit_exps_idx]
+        positive_temp_unit_conv_factors = temp_unit_conv_shift[
+            positive_temp_unit_exps_idx
+        ]
         conv_shift = (positive_temp_unit_exps * positive_temp_unit_conv_factors).sum()
         # Calculate conversion factor for all other non-temperature units
         non_temp_units_mask = np.logical_not(temp_bool_mask)
-        list_conv_factor = self._db_conv_factors[non_temp_units_mask] ** self._all_units_exps[non_temp_units_mask]
+        list_conv_factor = (
+            self._db_conv_factors[non_temp_units_mask]
+            ** self._all_units_exps[non_temp_units_mask]
+        )
         conv_factor = list_conv_factor[list_conv_factor != 0].prod()
         return conv_shift, conv_factor
 
@@ -378,7 +440,9 @@ class Unit:
         # see `is_convertible_to` for more info.
         is_convertible, n_factor = self.is_convertible_to(unit, return_n_factor=True)
         if not is_convertible:
-            raise ValueError("The current unit's dimension does not match with the target unit.")
+            raise ValueError(
+                "The current unit's dimension does not match with the target unit."
+            )
         else:
             conv_shift_self, conv_factor_self = self.conversion_coefficients_to_si
             conv_factor_self *= phys_consts["avogadro_const"]["value"] ** -n_factor
@@ -436,7 +500,9 @@ class Unit:
             converted_unit = unit
         return conv_shit, conv_factor, converted_unit
 
-    def is_convertible_to(self, unit: Union[str, Unit], return_n_factor=False) -> Union[bool, Tuple[bool, float]]:
+    def is_convertible_to(
+        self, unit: Union[str, Unit], return_n_factor=False
+    ) -> Union[bool, Tuple[bool, float]]:
         """
         Check whether the current unit is convertible to another unit.
         This is the case for two units with the same primary dimension decomposition,
@@ -465,7 +531,9 @@ class Unit:
         elif isinstance(unit, Unit):
             pass
         else:
-            raise ValueError("Argument `unit` should either be a string or a `Unit` object.")
+            raise ValueError(
+                "Argument `unit` should either be a string or a `Unit` object."
+            )
         # Divide dimensions and take the primary dimension decomposition of the result
         dim_diff = (unit.dimension / self.dimension).exponents_primary_decomposition
         # Get the index of 'amount of substance' dimension
@@ -500,7 +568,9 @@ class Unit:
             Union[Unit, None]
             Depending on the value of `inplace`.
         """
-        nonzero_nontemp_exps_mask = self._all_units_exps != 0 * self._db_dim_names != "temperature"
+        nonzero_nontemp_exps_mask = (
+            self._all_units_exps != 0 * self._db_dim_names != "temperature"
+        )
         no_prefix_mask = self._db_prefix_exp == 0
         raise NotImplementedError("Method `modify_prefix` is not yet implemented.")
         return
@@ -525,7 +595,9 @@ class Unit:
         elif isinstance(other, str):
             return self.dimension == Unit(other).dimension
         else:
-            raise ValueError("Dimension equality can only be assessed for another Unit or Dimension objects.")
+            raise ValueError(
+                "Dimension equality can only be assessed for another Unit or Dimension objects."
+            )
 
 
 class PredefinedUnits:
@@ -537,6 +609,7 @@ class PredefinedUnits:
     this class, which returns a new Unit object for
     that unit, each time it is called.
     """
+
     @property
     def primary(self):
         return PredefinedUnitsCategory(primary)
@@ -554,9 +627,11 @@ class PredefinedUnitsCategory:
     this class, which returns a new Unit object for
     that unit, each time it is called.
     """
+
     def __init__(self, unit_category_dict):
         def dim_gen(dim_units_dict):
             return PredefinedUnitsInDim(dim_units_dict)
+
         for dim_name, data in unit_category_dict.items():
             property(setattr(self, dim_name, dim_gen(dim_units_dict=data)))
 
@@ -568,9 +643,11 @@ class PredefinedUnitsInDim:
     this class, which returns a new Unit object for
     that unit, each time it is called.
     """
+
     def __init__(self, dim_units_dict):
         def unit_gen(unit_symbol):
             return Unit(unit_symbol)
+
         for unit_name, data in dim_units_dict["units"].items():
             property(setattr(self, unit_name, unit_gen(data["symbol"])))
 
