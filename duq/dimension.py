@@ -282,7 +282,8 @@ class Dimension:
         # Create index array for use in the While loop, since we are concatenating two arrays
         dim_idxs = np.tile(np.arange(self._all_dims_exps.size), 2)
         # Repeat until all current primary dimensions are consumed
-        while not np.isclose(sum_current_prim_dim_exps, 0):
+        counter = 0
+        while not np.isclose(sum_current_prim_dim_exps, 0) or counter < 100:
             # Subtract all known dimension decompositions from the current decomposition
             subtraction = current_prim_dim_dec - self._db_prim_exps
             # And also add
@@ -305,6 +306,7 @@ class Dimension:
             # Update the current state
             current_prim_dim_dec = sub_add[best_result_idx]
             sum_current_prim_dim_exps = np.abs(current_prim_dim_dec).sum()
+            counter += 1
         return Dimension(new_dim_dec)
 
     @property
