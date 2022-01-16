@@ -220,6 +220,18 @@ derived = {
                 "symbol": "Pa",
                 "conv_factor": 1,
                 "prefix_exp": 0,
+            },
+            "atm": {
+                "name": "standard atmosphere",
+                "symbol": "atm",
+                "conv_factor": 101325,
+                "prefix_exp": 0,
+            },
+            "bar": {
+                "name": "bar",
+                "symbol": "bar",
+                "conv_factor": 1e5,
+                "prefix_exp": 0,
             }
         },
     },
