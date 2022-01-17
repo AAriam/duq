@@ -327,7 +327,7 @@ class Dimension:
         dim_idxs = np.tile(np.arange(self._all_dims_exps.size), 2)
         # Repeat until all current primary dimensions are consumed
         counter = 0
-        while not np.isclose(sum_current_prim_dim_exps, 0) or counter < 100:
+        while (not np.isclose(sum_current_prim_dim_exps, 0)) and (counter < 100):
             # Subtract all known dimension decompositions from the current decomposition
             subtraction = current_prim_dim_dec - self._db_prim_exps
             # And also add
