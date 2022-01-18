@@ -232,7 +232,7 @@ derived = {
                 "symbol": "bar",
                 "conv_factor": 1e5,
                 "prefix_exp": 0,
-            }
+            },
         },
     },
     "electric_charge": {
