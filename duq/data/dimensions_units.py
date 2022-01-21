@@ -113,9 +113,7 @@ primary = {
         "name": "amount of substance",
         "symbol": "N",
         "prim_dim_exps": np.array([0, 0, 0, 0, 0, 1, 0]),
-        "units": {
-            "mole": {"name": "mole", "symbol": "mol", "conv_factor": 1, "prefix_exp": 0}
-        },
+        "units": {"mole": {"name": "mole", "symbol": "mol", "conv_factor": 1, "prefix_exp": 0}},
     },
     "luminous_intensity": {
         "name": "luminous intensity",

@@ -62,9 +62,7 @@ class Dimension:
     _db_si_units: np.ndarray = np.array(
         [list(dim["units"].values())[0]["symbol"] for dim in _db_all.values()]
     )
-    _db_prim_exps: np.ndarray = np.array(
-        [dim["prim_dim_exps"] for dim in _db_all.values()]
-    )
+    _db_prim_exps: np.ndarray = np.array([dim["prim_dim_exps"] for dim in _db_all.values()])
 
     @classmethod
     def supported_input_dimensions(cls) -> Tuple:
@@ -73,10 +71,7 @@ class Dimension:
         available for constructing a Dimension object.
         """
         return tuple(
-            [
-                (name, symbol)
-                for name, symbol in zip(Dimension._db_names, Dimension._db_symbols)
-            ]
+            [(name, symbol) for name, symbol in zip(Dimension._db_names, Dimension._db_symbols)]
         )
 
     @classmethod
@@ -122,9 +117,7 @@ class Dimension:
             elif all_dims_exps.dtype.kind not in (
                 np.typecodes["AllInteger"] + np.typecodes["AllFloat"]
             ):
-                raise ValueError(
-                    "All elements of the `dimension` array must be numbers."
-                )
+                raise ValueError("All elements of the `dimension` array must be numbers.")
             else:
                 self._all_dims_exps[...] = all_dims_exps
         else:
@@ -152,8 +145,7 @@ class Dimension:
             "Equality can only be assessed between two Dimension objects.",
         )
         return np.all(
-            self.exponents_primary_decomposition
-            == other.exponents_primary_decomposition
+            self.exponents_primary_decomposition == other.exponents_primary_decomposition
         )
 
     def __mul_common__(self, other):
@@ -172,9 +164,7 @@ class Dimension:
         return self
 
     def __truediv_common__(self, other):
-        raise_for_type(
-            other, Dimension, "Division is only defined between two Dimension objects."
-        )
+        raise_for_type(other, Dimension, "Division is only defined between two Dimension objects.")
         return self._all_dims_exps - other._all_dims_exps
 
     def __truediv__(self, other):
@@ -185,9 +175,7 @@ class Dimension:
         return self
 
     def __pow_common__(self, power):
-        raise_for_type(
-            power, (int, float), "Exponentiation is only defined for a number."
-        )
+        raise_for_type(power, (int, float), "Exponentiation is only defined for a number.")
         return self._all_dims_exps * power
 
     def __pow__(self, power):
@@ -205,9 +193,7 @@ class Dimension:
         names_ordered, exps_ordered = order_for_repr(
             [self._db_names, self._all_dims_exps], self._prim_dim_count
         )
-        return gen_symbol(names_ordered, exps_ordered, " . ").replace(
-            "empty", "dimensionless"
-        )
+        return gen_symbol(names_ordered, exps_ordered, " . ").replace("empty", "dimensionless")
 
     @property
     def name_shortest_composition(self) -> str:
@@ -294,9 +280,7 @@ class Dimension:
         Array of exponents of the primary dimension decomposition of the current dimension, in the order:
         [mass, length, time, electric current, temperature, amount of substance, luminous intensity].
         """
-        return self.equiv_dim_primary_decomposition.exponents_as_is[
-            : self._prim_dim_count
-        ]
+        return self.equiv_dim_primary_decomposition.exponents_as_is[: self._prim_dim_count]
 
     @property
     def is_primary_dimension(self) -> bool:
@@ -367,9 +351,7 @@ class Dimension:
             A new `Dimension` object with the same primary dimension decomposition
             as the current dimension, but composed only of primary dimensions.
         """
-        each_prim_dim_decomposition = (
-            self._all_dims_exps.reshape(-1, 1) * self._db_prim_exps
-        )
+        each_prim_dim_decomposition = self._all_dims_exps.reshape(-1, 1) * self._db_prim_exps
         total_prim_dim_decomposition = each_prim_dim_decomposition.sum(axis=0)
         return Dimension.from_prim_dim_decomposition(total_prim_dim_decomposition)
 
@@ -397,9 +379,7 @@ class Dimension:
         # s is the number of available dimensions in the class database (e.g. size of self._db_names),
         # and n is the number of primary dimensions, i.e. 7.
         # With the current number of available dimensions (19), the shape will be (50388, 7).
-        combs = np.array(
-            list(combinations(range(self._db_names.size), self._prim_dim_count))
-        )
+        combs = np.array(list(combinations(range(self._db_names.size), self._prim_dim_count)))
 
         solutions = []
         # Iterate over all combinations

@@ -56,9 +56,7 @@ class Quantity:
         if isinstance(value, (int, float, np.number)):
             self._value = value
         else:
-            raise ValueError(
-                "Type of `value` should either be int, float, or numpy.number."
-            )
+            raise ValueError("Type of `value` should either be int, float, or numpy.number.")
 
         # Verify the type of `unit` and assign if correct.
         if isinstance(unit, str):
@@ -66,9 +64,7 @@ class Quantity:
         elif isinstance(unit, Unit):
             self._unit = unit
         else:
-            raise NotImplementedError(
-                "Acceptable types for `unit` are string and unit.Unit."
-            )
+            raise NotImplementedError("Acceptable types for `unit` are string and unit.Unit.")
 
         # Verify the type of `normalize` and assign if correct.
         if isinstance(normalization, bool):
@@ -310,9 +306,7 @@ class Quantity:
         exp = int(np.floor(np.log10(abs(self.value))))
         # Update value and unit accordingly
         new_value = self._value * (10 ** -exp) if exp != 0 else self._value
-        new_unit = (
-            self.unit.modify_prefix(exp, inplace=False) if exp != 0 else self.unit
-        )
+        new_unit = self.unit.modify_prefix(exp, inplace=False) if exp != 0 else self.unit
         if inplace:
             self._value, self._unit = new_value, new_unit
         else:
