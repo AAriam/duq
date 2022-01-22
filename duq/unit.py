@@ -479,19 +479,20 @@ class Unit:
         Parameters
         ----------
         unit : Union[str, Unit]
-            The dimension for which convertibility should be checked.
+            The unit for which convertibility should be checked.
         return_n_factor : bool (optional; default: False)
             Whether to return the exponent of the amount-of-substance dimension
-            with which the current dimension should be multiplied, in order to
+            with which the current unit's dimension should be multiplied, in order to
             have the same dimension for amount of substance as the second unit.
 
         Returns
         -------
             Union[bool, tuple[bool, float]]
-            The first element is a boolean telling whether the dimension is convertible at all,
+            The first element is a boolean telling whether the unit is convertible at all,
             while the second element (only when `return_N_factor` argument is set to True) is
-            the exponent of the amount-of-substance dimension with which the current dimension
-            should be multiplied, in order to have the same dimension of amount of substance as the second unit.
+            the exponent of the amount-of-substance dimension with which the current unit's
+            dimension should be multiplied, in order to have the same dimension of amount of
+            substance as the second unit.
         """
         if isinstance(unit, str):
             unit = Unit(unit)
@@ -499,21 +500,7 @@ class Unit:
             pass
         else:
             raise ValueError("Argument `unit` should either be a string or a `Unit` object.")
-        # Divide dimensions and take the primary dimension decomposition of the result
-        dim_diff = (unit.dimension / self.dimension).exponents_primary_decomposition
-        # Get the index of 'amount of substance' dimension
-        idx_amount_of_subst_dim = np.argwhere(self.dimension._db_symbols == "N")[0, 0]
-        # Note the exponent of the 'amount of substance' dimension
-        dim_n_diff = dim_diff[idx_amount_of_subst_dim]
-        # Now set it to zero and check if all exponents are now zero
-        dim_diff[idx_amount_of_subst_dim] = 0
-        # The unit is only convertible if all exponents of the division result is zero
-        # not considering the 'amount of substance'.
-        is_convertible = np.all(dim_diff == 0)
-        if return_n_factor:
-            return is_convertible, dim_n_diff
-        else:
-            return is_convertible
+        return self.dimension.is_convertible_to(unit.dimension, return_n_factor)
 
     def modify_prefix(self, exp, target_unit=None, inplace=False) -> Union[Unit, None]:
         """

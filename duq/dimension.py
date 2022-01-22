@@ -428,6 +428,57 @@ class Dimension:
             equiv_dims.append(Dimension(sol))
         return equiv_dims
 
+    def is_convertible_to(
+            self, dimension: Union[str, Dimension], return_n_factor=False
+    ) -> Union[bool, Tuple[bool, float]]:
+        """
+        Check whether the current dimension is convertible to another dimension.
+        This is the case for two dimensions with the same primary dimension decomposition,
+        disregarding the exponent of the dimension for amount of substance (N).
+        In other words, any dimension can be (de)molarized.
+
+        Parameters
+        ----------
+        dimension : Union[str, Dimension]
+            The dimension for which convertibility should be checked.
+        return_n_factor : bool (optional; default: False)
+            Whether to return the exponent of the amount-of-substance dimension
+            with which the current dimension should be multiplied, in order to
+            have the same dimension for amount of substance as the second unit.
+
+        Returns
+        -------
+            Union[bool, tuple[bool, float]]
+            The first element is a boolean telling whether the dimension is convertible at all,
+            while the second element (only when `return_N_factor` argument is set to True) is
+            the exponent of the amount-of-substance dimension with which the current dimension
+            should be multiplied, in order to have the same dimension of amount of substance as the
+            second dimension.
+        """
+        if isinstance(dimension, str):
+            dimension = Dimension(dimension)
+        elif isinstance(dimension, Dimension):
+            pass
+        else:
+            raise ValueError(
+                "Argument `dimension` should either be a string or a `Dimension` object."
+            )
+        # Divide dimensions and take the primary dimension decomposition of the result
+        dim_diff = (dimension / self).exponents_primary_decomposition
+        # Get the index of 'amount of substance' dimension
+        idx_amount_of_subst_dim = np.argwhere(self._db_symbols == "N")[0, 0]
+        # Note the exponent of the 'amount of substance' dimension
+        dim_n_diff = dim_diff[idx_amount_of_subst_dim]
+        # Now set it to zero and check if all exponents are now zero
+        dim_diff[idx_amount_of_subst_dim] = 0
+        # The unit is only convertible if all exponents of the division result is zero
+        # not considering the 'amount of substance'.
+        is_convertible = np.all(dim_diff == 0)
+        if return_n_factor:
+            return is_convertible, dim_n_diff
+        else:
+            return is_convertible
+
 
 class PredefinedDimensions:
     """
