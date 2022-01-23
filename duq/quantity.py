@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 from functools import partial
 
 import numpy as np
@@ -312,7 +312,7 @@ class Quantity:
         else:
             return Quantity(new_value, new_unit)
 
-    def convert_unit_to_si(self, inplace: bool = False) -> Union[Quantity, None]:
+    def convert_unit_to_si(self, inplace: bool = False) -> Optional[Quantity]:
         """
         Convert the quantity to SI units.
 
@@ -331,7 +331,7 @@ class Quantity:
 
     def convert_unit(
         self, new_unit: Union[str, Unit], inplace: bool = False
-    ) -> Union[Quantity, None]:
+    ) -> Optional[Quantity]:
         """
         Convert the quantity to another unit.
 
@@ -352,7 +352,7 @@ class Quantity:
 
     def _convert_unit(
         self, conversion_results: Tuple[float, float, Unit], inplace: bool
-    ) -> Union[Quantity, None]:
+    ) -> Optional[Quantity]:
         """
         Base function used by both `convert_unit` and `convert_unit_to_si` functions.
         """
