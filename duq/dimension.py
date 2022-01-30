@@ -429,7 +429,7 @@ class Dimension:
         return equiv_dims
 
     def is_convertible_to(
-            self, dimension: Union[str, Dimension], return_n_factor=False
+        self, dimension: Union[str, Dimension], return_n_factor=False
     ) -> Union[bool, Tuple[bool, float]]:
         """
         Check whether the current dimension is convertible to another dimension.
