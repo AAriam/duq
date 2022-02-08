@@ -85,19 +85,33 @@ class Quantity:
     def __str__(self):
         return f"{self.str_repr_short}\n\n{str(self.unit)}"
 
-    def __eq__(self, other: Quantity):
+    def __compare_common__(self, other):
         raise_for_type(
             other,
             Quantity,
-            "Equality can only be assessed between two `Quantity` objects.",
+            "Comparison can only be performed on two `Quantity` objects.",
         )
-        try:
-            other_in_self_units = other.convert_unit(self.unit)
-        except ValueError as e:
-            print(e)
-            return False
+        other_in_self_units = other.convert_unit(self.unit)
+        return other_in_self_units
+
+    def __eq__(self, other: Quantity):
+        other_in_self_units = self.__compare_common__(other)
         return np.isclose(self.value, other_in_self_units.value)
 
+    def __lt__(self, other):
+        other_in_self_units = self.__compare_common__(other)
+        return self.value < other_in_self_units.value
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+    def __gt__(self, other):
+        other_in_self_units = self.__compare_common__(other)
+        return self.value > other_in_self_units.value
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
+    
     def __add_common__(self, other, sign):
         # Common operations between __add__, __sub__, __iadd__ and __isub__
         raise_for_type(
