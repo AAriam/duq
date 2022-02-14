@@ -20,7 +20,7 @@ phys_consts = {
     "boltzmann_const": {
         "name": "Boltzmann constant",
         "symbol": "k_B",
-        "value": 1.380649e-32,
+        "value": 1.380649e-23,
         "unit": "J.K^-1",
     },
     "speed_of_light": {
