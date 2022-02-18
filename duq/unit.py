@@ -224,6 +224,11 @@ class Unit:
         self._dimension /= other.dimension
         return self
 
+    def __rtruediv__(self, other):
+        if other != 1:
+            raise ValueError("Right-division can only be performed on 1.")
+        return Unit(-self._all_units_exps)
+
     def __pow_common__(self, power):
         raise_for_type(power, (int, float), "Exponentiation is only defined for a number.")
         return self._all_units_exps * power
