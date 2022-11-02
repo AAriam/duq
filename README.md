@@ -1,4 +1,4 @@
-# Dimensions, Units, Quantities (DUQ)
+# DUQ: Dimensions, Units, Quantities
 [![PyPI Latest Release](https://img.shields.io/pypi/v/duq.svg)](https://pypi.org/project/duq/)
 [![Package Status](https://img.shields.io/pypi/status/duq.svg)](https://pypi.org/project/duq/)
 [![Downloads](https://pepy.tech/badge/duq)](https://pepy.tech/project/duq)
@@ -14,7 +14,7 @@ DUQ offers tools for working with physical dimensions, units, and quantities. It
 * unit conversion
 * calculations with physical quantites
 
-## Installing
+## Installation
 ```sh
 pip install duq
 ```
