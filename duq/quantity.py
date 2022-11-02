@@ -111,7 +111,7 @@ class Quantity:
 
     def __ge__(self, other):
         return self.__gt__(other) or self.__eq__(other)
-    
+
     def __add_common__(self, other, sign):
         # Common operations between __add__, __sub__, __iadd__ and __isub__
         raise_for_type(
