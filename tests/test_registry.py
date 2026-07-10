@@ -41,7 +41,7 @@ def test_unit_of_unit_checks_registry() -> None:
     reg_b = UnitRegistry()
     metre = reg_a.unit("m")
     assert reg_a.unit(metre) is metre
-    with pytest.raises(duq.UndefinedUnitError, match="different registry"):
+    with pytest.raises(duq.RegistryMismatchError, match="different registry"):
         reg_b.unit(metre)
 
 

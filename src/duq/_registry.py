@@ -17,7 +17,7 @@ from fractions import Fraction
 from typing import Final
 
 from ._dimension import Dimension
-from ._errors import UndefinedUnitError
+from ._errors import RegistryMismatchError, UndefinedUnitError
 from ._parse import tokenize
 from ._unit import Factor, Prefix, Scalar, Unit, UnitAtom
 
@@ -229,6 +229,8 @@ class UnitRegistry:
             If a token resolves to no known atom or prefix.
         UnitParseError
             If the expression is malformed.
+        RegistryMismatchError
+            If a :class:`Unit` from a different registry is passed.
 
         Examples
         --------
@@ -238,7 +240,7 @@ class UnitRegistry:
         """
         if isinstance(expression, Unit):
             if expression.registry is not self:
-                raise UndefinedUnitError("unit belongs to a different registry")
+                raise RegistryMismatchError("unit belongs to a different registry")
             return expression
         self._ensure_loaded()
         factors = tuple(self._resolve(name, exp) for name, exp in tokenize(expression))
