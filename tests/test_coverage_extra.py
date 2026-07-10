@@ -41,7 +41,7 @@ def test_compact_handles_infinity() -> None:
 
 def test_rtruediv_and_pow_reject_non_numbers() -> None:
     assert Quantity(1.0, "m").__rtruediv__("x") is NotImplemented
-    assert Quantity(1.0, "m").__pow__(1.5) is NotImplemented
+    assert Quantity(1.0, "m").__pow__("x") is NotImplemented
     assert Quantity(1.0, "m").__mul__("x") is NotImplemented
     assert Quantity(1.0, "m").__truediv__("x") is NotImplemented
 

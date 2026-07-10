@@ -17,7 +17,7 @@ from decimal import Decimal
 from fractions import Fraction
 from typing import TYPE_CHECKING, Any, Final
 
-from ._dimension import Dimension
+from ._dimension import Dimension, _coerce_exponent
 from ._errors import (
     AffineUnitError,
     DimensionalityError,
@@ -452,9 +452,12 @@ class Quantity:
         return Quantity(_num_div(other, self._value), self._unit**-1)
 
     def __pow__(self, power: object) -> Quantity:
-        if isinstance(power, bool) or not isinstance(power, int | Fraction):
+        try:
+            exp = _coerce_exponent(power)
+        except TypeError:
             return NotImplemented
-        return Quantity(_num_pow(self._value, power), self._unit**power)
+        base = exp.numerator if exp.denominator == 1 else exp
+        return Quantity(_num_pow(self._value, base), self._unit**exp)
 
     def __neg__(self) -> Quantity:
         return self._scalar_mul(-1, invert=False)

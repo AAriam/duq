@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from typing import TYPE_CHECKING
 
-from ._dimension import Dimension
+from ._dimension import Dimension, _coerce_exponent
 from ._errors import AffineUnitError, RegistryMismatchError
 from ._format import format_composition, order_terms
 
@@ -227,9 +227,10 @@ class Unit:
         return Unit._create(self._registry, self._factors + inverted)
 
     def __pow__(self, power: object) -> Unit:
-        if isinstance(power, bool) or not isinstance(power, int | Fraction):
+        try:
+            exp = _coerce_exponent(power)
+        except TypeError:
             return NotImplemented
-        exp = Fraction(power)
         powered = tuple(Factor(f.prefix, f.atom, f.exponent * exp) for f in self._factors)
         return Unit._create(self._registry, powered)
 

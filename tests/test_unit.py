@@ -47,8 +47,18 @@ def test_reciprocal_only_one() -> None:
 
 def test_power_and_pow_type_guard() -> None:
     assert str(duq.unit("m") ** 3) == "m³"
-    assert duq.unit("m").__pow__(1.5) is NotImplemented
     assert duq.unit("m").__pow__(True) is NotImplemented
+    assert duq.unit("m").__pow__("x") is NotImplemented
+
+
+def test_unit_pow_accepts_exact_float() -> None:
+    assert duq.unit("m") ** 0.5 == duq.unit("m^1/2")
+    assert duq.unit("m") ** 1.5 == duq.unit("m^3/2")
+
+
+def test_unit_pow_rejects_inexact_float() -> None:
+    with pytest.raises(ValueError, match="not an exact simple fraction"):
+        duq.unit("m") ** 0.333
 
 
 def test_to_coherent_si() -> None:

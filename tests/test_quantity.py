@@ -160,6 +160,18 @@ def test_power() -> None:
     assert str(q.unit) == "m²"
 
 
+def test_power_accepts_exact_float() -> None:
+    q = Quantity(4.0, "m^2") ** 0.5
+    assert q.value == 2.0
+    assert str(q.unit) == "m"
+    assert (Quantity(8.0, "m^2") ** 1.5).unit == duq.unit("m^3")
+
+
+def test_power_rejects_inexact_float() -> None:
+    with pytest.raises(ValueError, match="not an exact simple fraction"):
+        Quantity(2.0, "m") ** 0.333
+
+
 def test_negation_and_abs() -> None:
     assert (-Quantity(2.0, "m")).value == -2.0
     assert (+Quantity(2.0, "m")).value == 2.0
