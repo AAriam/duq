@@ -1,7 +1,13 @@
 # duq v1.0 — Design Document
 
-Status: final (v1)
+Status: final (v1) — historical design record; kept as written
 Date: 2026-07-10
+
+> **As-built note (2026-07-10, post-implementation):** the NumPy layer shipped folded
+> into the single `duq.Quantity` class with a private lazy `duq._numpy` backend, rather
+> than a separate public `duq.numpy` module as sketched in §3/§3.5; the JAX layer
+> shipped as `duq.jax` exactly as designed. For the as-built surface, see the API
+> reference and `docs/dev/jax_coverage.md`.
 Companion: `research_numpy_jax_units.md` (technical due-diligence underpinning §3.5)
 
 ## 1. Goals and positioning

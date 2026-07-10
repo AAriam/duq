@@ -1,16 +1,43 @@
 """duq: dimensions, units and quantities for scientific computing.
 
-The top-level namespace re-exports the public API.  The pure core imports no
-array library, so ``import duq`` stays fast and never requires NumPy or JAX.
+A lean dimensional core carries units through **unit-carrying NumPy arrays**
+*and* **jit/grad/vmap-safe JAX arrays** — the same :class:`Quantity` semantics on
+both back-ends.  Units compose **as entered** (``kJ/mol`` stays ``kJ/mol``),
+exponents are exact ``fractions.Fraction`` objects, conversions are **fail-loud**
+(a dimensional mismatch raises; units are never silently dropped), and the
+package ships CODATA-2022 constants and first-class dimensional analysis.
 
-Examples
---------
+``import duq`` imports **no** array library, so it stays fast and never requires
+NumPy or JAX at import time; the JAX back-end lives behind the ``duq[jax]`` extra.
+
+A 30-second tour
+----------------
 >>> import duq
+
+Build a quantity; units are kept as entered and arithmetic is dimension-checked:
+
 >>> q = duq.Quantity(1.0, "kJ/mol")
->>> q.to("eV/mol").unit.dimension == duq.dimension("molar_energy")
-True
+>>> str(q.to("eV/mol").unit)
+'eV·mol⁻¹'
+>>> (duq.Quantity(2.0, "m") / duq.Quantity(4.0, "s")).value
+0.5
+
+Reach units and dimensions by attribute, and CODATA-2022 constants as quantities:
+
+>>> str(duq.units.kJ), str(duq.dims.energy)
+('kJ', 'M·L²·T⁻²')
 >>> duq.constants.k_B.unit == duq.unit("J/K")
 True
+
+The same :class:`Quantity` wraps NumPy arrays; add the ``duq[jax]`` extra and
+``import duq.jax`` for the ``jit``/``grad``/``vmap``-safe flavour.  Molar
+equivalence (``kJ/mol`` to ``J`` via Avogadro's number) is opt-in:
+
+>>> q.to("eV/mol").unit.dimension == duq.dimension("molar_energy")
+True
+
+See :mod:`duq.analysis`, :mod:`duq.constants`, :mod:`duq.jax`, and
+:func:`duq.uconvert` / :func:`duq.ustrip`.
 """
 
 from __future__ import annotations

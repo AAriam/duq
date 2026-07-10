@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0a1] — unreleased
+
+First public (alpha) release: a complete, from-scratch rewrite of duq as a lean
+dimensional core with unit-carrying **NumPy** and **JAX** arrays. The pre-1.0
+prototype API is removed outright (see **Removed**). The release date and tag are
+set by the maintainer per `RELEASING.md`.
 
 ### Added
 
@@ -109,13 +114,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TOML catalogs (`prefixes`, `dimensions`, `units`, `constants`) plus a
     `DuqError` hierarchy, `duq.units`/`duq.dims` namespaces, and free
     functions `duq.uconvert`/`duq.ustrip`; `import duq` never imports NumPy.
-
-### Removed
-
-- The pre-1.0 prototype API (`duq.dimension`, `duq.unit`, `duq.quantity`,
-  `duq.helpers`, the `duq.data.*` Python modules and their `predefined`
-  containers) is removed outright, without a deprecation cycle, as the package
-  was an unreleased prototype.
+- **Documentation & release readiness:**
+  - a rewritten `README.md` (positioning, verified scalar/NumPy/JAX quickstarts,
+    an honest pint/unyt/astropy comparison, install and development sections);
+  - a MkDocs + mkdocs-material documentation site (build-only, not deployed) with
+    Learn guides, an mkdocstrings-generated API reference, a unit-catalog page
+    generated from the TOML, and the design/research/JAX-coverage dev docs; a
+    `docs` pixi environment (`docs-build --strict`, `docs-serve`) and a `docs` CI
+    job;
+  - four executed, output-carrying notebooks under `docs/notebooks/`
+    (`01_quickstart`, `02_dimensional_analysis`, `03_numpy`, `04_jax`);
+  - `RELEASING.md` and `CONTRIBUTING.md`, plus a `build` pixi environment
+    (`python -m build` + `twine check`) for producing release artifacts.
 
 ### Changed
 
@@ -130,3 +140,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [mypy](https://mypy-lang.org/) for static type checking;
   - a consolidated GitHub Actions CI workflow driven by pixi;
   - a `.pre-commit-config.yaml` with Ruff and standard hygiene hooks.
+
+### Removed
+
+- The pre-1.0 prototype API (`duq.dimension`, `duq.unit`, `duq.quantity`,
+  `duq.helpers`, the `duq.data.*` Python modules and their `predefined`
+  containers) is removed outright, without a deprecation cycle, as the package
+  was an unreleased prototype.
+- The old demonstration notebooks under `docs/demos_jupyter_notebook/` (written
+  against the prototype API) are deleted and replaced by `docs/notebooks/`.
