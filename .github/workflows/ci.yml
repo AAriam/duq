@@ -81,5 +81,5 @@ jobs:
           pixi-version: v0.72.0
           environments: test-jax
           cache: true
-      - name: Run tests with JAX installed
-        run: pixi run -e test-jax test
+      - name: Run tests with JAX installed (duq/jax coverage gate ≥90%)
+        run: pixi run -e test-jax test-jax
