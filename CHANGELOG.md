@@ -24,9 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     and much more.
   - Fail-loud everywhere: any uncovered ufunc/function, any `out=` argument, and
     `multiply.reduce` raise `UnsupportedOperationError` naming the operation;
-    units are never silently dropped. `np.array(q)`/`np.asarray(q)` and
-    `float(q)`/`int(q)`/`complex(q)` raise with guidance to use `duq.ustrip`,
-    closing the classic silent-strip hole.
+    units are never silently dropped. `np.array(q)`/`np.asarray(q)` raise with
+    guidance to use `duq.ustrip`, closing the classic silent-strip hole.
+    `float(q)`/`int(q)`/`complex(q)`/`bool(q)` coerce **dimensionless**
+    quantities by applying the unit scale (`float(Quantity(50.0, "%")) == 0.5`;
+    radian-labelled values pass through) and raise for anything dimensional —
+    pint-consistent behaviour.
   - `Unit` opts out of NumPy's ufunc machinery (`__array_ufunc__ = None`) and
     scales into a `Quantity` when combined with a number or array, so
     `np.linspace(0, 1, 5) * duq.units.m`, `5 * duq.units.m`, `duq.units.m * 5`

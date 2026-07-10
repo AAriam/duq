@@ -110,10 +110,25 @@ def test_matmul_operator_and_reflected() -> None:
     assert result.unit == duq.unit("s")
 
 
-def test_bool_of_array_quantity_matches_numpy() -> None:
-    assert bool(Quantity(np.array([1.0]), "m"))
+def test_bool_of_dimensionless_array_matches_numpy() -> None:
+    # A dimensionless array quantity follows NumPy truthiness: one element
+    # coerces, more raise ValueError.
+    assert bool(Quantity(np.array([1.0]), "1"))
+    assert bool(Quantity(np.array([100.0]), "%"))
     with pytest.raises(ValueError, match="ambiguous"):
-        bool(Quantity(V, "m"))
+        bool(Quantity(V, "1"))
+    # A dimensional quantity refuses truthiness altogether.
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        bool(Quantity(np.array([1.0]), "m"))
+
+
+def test_float_of_dimensionless_array_applies_scale() -> None:
+    # 0-d arrays coerce like scalars (1-d size-1 follows NumPy's own rule,
+    # which differs between 1.26 and 2.x, so only 0-d is asserted here).
+    assert float(Quantity(np.array(50.0), "%")) == 0.5
+    assert int(Quantity(np.array(200.0), "%")) == 2
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        float(Quantity(np.array(1.0), "m"))
 
 
 @pytest.mark.parametrize(

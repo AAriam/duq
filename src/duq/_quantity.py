@@ -886,30 +886,78 @@ class Quantity:
 
         return q_astype(self, dtype, kwargs)
 
-    # -- scalar coercion (fail loud, never silently strip) ------------------
+    # -- scalar coercion (dimensionless converts; dimensional fails loud) ---
+
+    def _as_dimensionless(self, target: str) -> Any:
+        """Return the magnitude in the bare scale-1 dimensionless unit, or fail loud.
+
+        A dimensionless quantity has one unambiguous numeric value once its
+        scale is applied (``50 %`` is ``0.5``; radian-labelled values pass
+        through unchanged), so coercing it never loses information.  Anything
+        dimensional refuses, pointing at :func:`duq.ustrip`.
+        """
+        if self._unit.is_dimensionless:
+            return self._si_value()
+        raise UnsupportedOperationError(
+            f"refusing to coerce a quantity of dimension {self.dimension} to a "
+            f"bare {target}, which would drop its unit; use duq.ustrip(unit, q) "
+            "to get the magnitude in a chosen unit (only dimensionless "
+            "quantities coerce directly)"
+        )
 
     def __bool__(self) -> bool:
-        # Defined explicitly so that adding ``__len__`` (for array magnitudes)
-        # does not make ``bool(scalar_quantity)`` fall back to ``__len__``.
-        return bool(self._value)
+        """Return the truthiness of a dimensionless quantity's magnitude.
+
+        Dimensionless (including angle-labelled and scaled units like ``%``)
+        follows the magnitude's own truthiness -- for array magnitudes that is
+        NumPy's rule (one element coerces, more raise ``ValueError``).
+        Dimensional quantities raise :class:`~duq.UnsupportedOperationError`.
+
+        Examples
+        --------
+        >>> import duq
+        >>> bool(duq.Quantity(0.0, "1")), bool(duq.Quantity(50.0, "%"))
+        (False, True)
+        """
+        return bool(self._as_dimensionless("bool"))
 
     def __float__(self) -> float:
-        raise UnsupportedOperationError(
-            "refusing to coerce a Quantity to a bare float, which would drop its "
-            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
-        )
+        """Return a dimensionless quantity's magnitude as a float (scale applied).
+
+        Dimensional quantities raise :class:`~duq.UnsupportedOperationError`
+        with guidance to use :func:`duq.ustrip` (pint-consistent behaviour).
+
+        Examples
+        --------
+        >>> import duq
+        >>> float(duq.Quantity(50.0, "%"))
+        0.5
+        >>> float(duq.Quantity(1.5, "rad"))
+        1.5
+        """
+        return float(self._as_dimensionless("float"))
 
     def __int__(self) -> int:
-        raise UnsupportedOperationError(
-            "refusing to coerce a Quantity to a bare int, which would drop its "
-            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
-        )
+        """Return a dimensionless quantity's magnitude as an int (scale applied).
+
+        Examples
+        --------
+        >>> import duq
+        >>> int(duq.Quantity(200.0, "%"))
+        2
+        """
+        return int(self._as_dimensionless("int"))
 
     def __complex__(self) -> complex:
-        raise UnsupportedOperationError(
-            "refusing to coerce a Quantity to a bare complex, which would drop its "
-            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
-        )
+        """Return a dimensionless quantity's magnitude as a complex (scale applied).
+
+        Examples
+        --------
+        >>> import duq
+        >>> complex(duq.Quantity(50.0, "%"))
+        (0.5+0j)
+        """
+        return complex(self._as_dimensionless("complex"))
 
     # -- rendering ----------------------------------------------------------
 

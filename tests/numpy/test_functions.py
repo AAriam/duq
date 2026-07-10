@@ -103,7 +103,6 @@ _PRESERVE: dict[str, Callable[[], Case]] = {
     "pad": lambda: (np.pad(qv(), 1, constant_values=Quantity(0.0, "m")), np.pad(V, 1), "m"),
     "pad_edge": lambda: (np.pad(qv(), 1, mode="edge"), np.pad(V, 1, mode="edge"), "m"),
     "zeros_like": lambda: (np.zeros_like(qv()), np.zeros_like(V), "m"),
-    "empty_like": lambda: (np.zeros_like(qv()) * 0, np.zeros_like(V), "m"),
     "ones_like": lambda: (np.ones_like(qv()), np.ones_like(V), "m"),
     "full_like_quantity": lambda: (
         np.full_like(qv(), Quantity(2.0, "m")),
@@ -119,6 +118,19 @@ def test_function_preserves_unit(name: str) -> None:
     assert isinstance(result, Quantity), f"{name} must return a Quantity"
     assert result.unit == duq.unit(unit), f"{name}: {result.unit} != {unit}"
     np.testing.assert_allclose(np.asarray(result.value), expected)
+
+
+def test_creation_like_family_preserves_units() -> None:
+    q = qv()
+    for func in (np.zeros_like, np.ones_like, np.empty_like):
+        result = func(q)
+        assert isinstance(result, Quantity), func.__name__
+        assert result.unit == duq.unit("m"), func.__name__
+        assert result.shape == V.shape
+        assert result.dtype == V.dtype
+    filled = np.full_like(q, Quantity(200.0, "cm"))  # converted to the template unit
+    assert filled.unit == duq.unit("m")
+    np.testing.assert_allclose(np.asarray(filled.value), np.full_like(V, 2.0))
 
 
 def test_variance_squares_the_unit() -> None:

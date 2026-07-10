@@ -27,7 +27,7 @@ def test_array_and_asarray_never_strip_units() -> None:
         q.__array__()
 
 
-def test_scalar_coercions_fail_loud() -> None:
+def test_scalar_coercions_fail_loud_for_dimensional() -> None:
     q = Quantity(2.0, "m")
     with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
         float(q)
@@ -35,6 +35,10 @@ def test_scalar_coercions_fail_loud() -> None:
         int(q)
     with pytest.raises(duq.UnsupportedOperationError):
         complex(q)
+    with pytest.raises(duq.UnsupportedOperationError):
+        bool(q)
+    # Dimensionless quantities coerce, applying the unit scale (pint-consistent).
+    assert float(Quantity(50.0, "%")) == 0.5
 
 
 def test_unsupported_ufunc_names_the_function() -> None:
@@ -84,10 +88,22 @@ def test_power_rejects_nonuniform_array_exponent() -> None:
 def test_allclose_requires_quantity_atol_for_dimensional() -> None:
     a = Quantity(V, "m")
     b = Quantity(V, "m")
+    # The default atol=1e-8 would silently assume the base-unit scale (wrong
+    # for e.g. km), so a dimensional comparison demands an explicit Quantity atol.
     with pytest.raises(duq.DimensionalityError, match="atol"):
-        np.allclose(a, b)  # default atol is meaningless for a dimensional array
+        np.allclose(a, b)
     with pytest.raises(duq.DimensionalityError, match="atol"):
-        np.allclose(a, b, atol=1e-9)  # bare atol rejected too
+        np.allclose(a, b, atol=1e-9)  # bare float atol rejected too
+    with pytest.raises(duq.DimensionalityError, match="atol"):
+        np.isclose(a, b)
+    with pytest.raises(duq.DimensionalityError, match="atol"):
+        np.isclose(a, b, atol=1e-9)
+    # A Quantity atol converts and works, whatever its (compatible) unit.
+    km = Quantity(V / 1000.0, "km")
+    assert np.allclose(a, km, atol=Quantity(1e-6, "mm"))
+    assert bool(np.isclose(a, km, atol=Quantity(1e-6, "mm")).all())
+    with pytest.raises(duq.DimensionalityError):
+        np.allclose(a, b, atol=Quantity(1e-9, "s"))  # wrong-dimension atol
 
 
 def test_incompatible_dimensions_raise() -> None:

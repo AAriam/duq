@@ -190,6 +190,15 @@ def test_reduce_and_accumulate_preserve_units() -> None:
     np.testing.assert_allclose(np.asarray(acc.value), np.add.accumulate(P))
 
 
+def test_power_scalar_and_0d_exponents() -> None:
+    q = Quantity(P, "m")
+    for exponent in (2, 2.0, np.array(2.0), np.float64(2.0), Quantity(np.array(2.0), "1")):
+        result = np.power(q, exponent)
+        assert isinstance(result, Quantity), repr(exponent)
+        assert result.unit == duq.unit("m^2"), repr(exponent)
+        np.testing.assert_allclose(np.asarray(result.value), P**2)
+
+
 def test_power_accepts_uniform_array_exponent() -> None:
     q = Quantity(P, "m")
     result = np.power(q, np.array([2.0, 2.0, 2.0]))
