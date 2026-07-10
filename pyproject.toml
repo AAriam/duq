@@ -91,6 +91,9 @@ fmt-check = "ruff format --check ."
 [tool.pixi.feature.type.dependencies]
 mypy = "*"
 numpy = ">=1.26"
+# Present so mypy can resolve the (typed) test-suite imports under --strict.
+pytest = "*"
+hypothesis = "*"
 
 [tool.pixi.feature.type.tasks]
 typecheck = "mypy"
@@ -134,10 +137,7 @@ test-py314 = { features = ["test", "py314"] }
 [tool.ruff]
 line-length = 99
 target-version = "py311"
-# The `src/duq` package is legacy code that is being rewritten in a follow-up
-# PR; exclude it (and the demo notebooks) from linting/formatting for now so
-# this scaffolding change does not touch source logic.
-extend-exclude = ["src/duq", "docs"]
+extend-exclude = ["docs"]
 
 [tool.ruff.lint]
 select = [
@@ -180,19 +180,6 @@ explicit_package_bases = true
 namespace_packages = true
 warn_unused_configs = true
 
-# Legacy package: type-checked properly in the follow-up rewrite PR.
-[[tool.mypy.overrides]]
-module = "duq.*"
-ignore_errors = true
-
-# Tests are not held to strict typing yet (they carry no annotations and call
-# into the legacy, untyped `duq` package).
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-disallow_untyped_calls = false
-
 # ---------------------------------------------------------------------------
 # pytest
 # ---------------------------------------------------------------------------
@@ -210,6 +197,7 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
+fail_under = 95
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

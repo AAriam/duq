@@ -1,0 +1,100 @@
+# SI decimal prefixes for duq, including the 2022 CGPM additions
+# (quetta/ronna/ronto/quecto).  Each prefix carries its symbol and its
+# power-of-ten exponent.  Prefixes are combined with prefixable atoms lazily at
+# parse time; the cross product is never materialised.
+
+[quetta]
+symbol = "Q"
+exponent10 = 30
+
+[ronna]
+symbol = "R"
+exponent10 = 27
+
+[yotta]
+symbol = "Y"
+exponent10 = 24
+
+[zetta]
+symbol = "Z"
+exponent10 = 21
+
+[exa]
+symbol = "E"
+exponent10 = 18
+
+[peta]
+symbol = "P"
+exponent10 = 15
+
+[tera]
+symbol = "T"
+exponent10 = 12
+
+[giga]
+symbol = "G"
+exponent10 = 9
+
+[mega]
+symbol = "M"
+exponent10 = 6
+
+[kilo]
+symbol = "k"
+exponent10 = 3
+
+[hecto]
+symbol = "h"
+exponent10 = 2
+
+[deca]
+symbol = "da"
+exponent10 = 1
+
+[deci]
+symbol = "d"
+exponent10 = -1
+
+[centi]
+symbol = "c"
+exponent10 = -2
+
+[milli]
+symbol = "m"
+exponent10 = -3
+
+[micro]
+symbol = "µ"
+exponent10 = -6
+
+[nano]
+symbol = "n"
+exponent10 = -9
+
+[pico]
+symbol = "p"
+exponent10 = -12
+
+[femto]
+symbol = "f"
+exponent10 = -15
+
+[atto]
+symbol = "a"
+exponent10 = -18
+
+[zepto]
+symbol = "z"
+exponent10 = -21
+
+[yocto]
+symbol = "y"
+exponent10 = -24
+
+[ronto]
+symbol = "r"
+exponent10 = -27
+
+[quecto]
+symbol = "q"
+exponent10 = -30

@@ -1,0 +1,547 @@
+# Unit catalogue for duq.
+#
+# Every atom carries:
+#   symbol       display symbol (as entered / rendered)
+#   name         human-readable name
+#   aliases      alternative spellings accepted by the parser (optional)
+#   dimension    named dimension from dimensions.toml  -- OR --
+#   exponents    explicit base-dimension exponent mapping
+#   scale        factor to the coherent SI unit, as a string
+#   exact        true  -> scale is parsed to an exact Fraction
+#                false -> scale is parsed to a float (measured / irrational)
+#   offset       additive offset to coherent SI (affine units only; default "0")
+#   prefixable   whether SI prefixes may be attached
+#   kind         "linear" (default), "affine" or "delta"
+#
+# Exact scales derived from post-2019 SI definitions (eV, e) use the exact
+# 2019 defining constants.  Measured atoms (Da, m_e, bohr, hartree) use CODATA
+# 2022 values and are therefore flagged exact = false.
+
+# --- SI base units ---------------------------------------------------------
+
+[units.second]
+symbol = "s"
+name = "second"
+dimension = "time"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.metre]
+symbol = "m"
+name = "metre"
+aliases = ["meter"]
+dimension = "length"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.kilogram]
+symbol = "kg"
+name = "kilogram"
+dimension = "mass"
+scale = "1"
+exact = true
+prefixable = false
+
+[units.ampere]
+symbol = "A"
+name = "ampere"
+dimension = "electric_current"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.kelvin]
+symbol = "K"
+name = "kelvin"
+dimension = "temperature"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.mole]
+symbol = "mol"
+name = "mole"
+dimension = "amount"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.candela]
+symbol = "cd"
+name = "candela"
+dimension = "luminous_intensity"
+scale = "1"
+exact = true
+prefixable = true
+
+# --- Mass ------------------------------------------------------------------
+
+[units.gram]
+symbol = "g"
+name = "gram"
+aliases = ["gramme"]
+dimension = "mass"
+scale = "1/1000"
+exact = true
+prefixable = true
+
+[units.tonne]
+symbol = "t"
+name = "tonne"
+dimension = "mass"
+scale = "1000"
+exact = true
+prefixable = false
+
+[units.dalton]
+symbol = "Da"
+name = "dalton"
+aliases = ["u"]
+dimension = "mass"
+scale = "1.66053906892e-27"
+exact = false
+prefixable = true
+
+[units.electron_mass]
+symbol = "m_e"
+name = "electron mass"
+dimension = "mass"
+scale = "9.1093837139e-31"
+exact = false
+prefixable = false
+
+# --- Length ----------------------------------------------------------------
+
+[units.angstrom]
+symbol = "Å"
+name = "angstrom"
+aliases = ["angstrom"]
+dimension = "length"
+scale = "1e-10"
+exact = true
+prefixable = false
+
+[units.bohr]
+symbol = "bohr"
+name = "bohr radius"
+dimension = "length"
+scale = "5.29177210544e-11"
+exact = false
+prefixable = false
+
+# --- Time ------------------------------------------------------------------
+
+[units.minute]
+symbol = "min"
+name = "minute"
+dimension = "time"
+scale = "60"
+exact = true
+prefixable = false
+
+[units.hour]
+symbol = "h"
+name = "hour"
+dimension = "time"
+scale = "3600"
+exact = true
+prefixable = false
+
+[units.day]
+symbol = "day"
+name = "day"
+dimension = "time"
+scale = "86400"
+exact = true
+prefixable = false
+
+[units.year_julian]
+symbol = "yr"
+name = "Julian year"
+aliases = ["year"]
+dimension = "time"
+scale = "31557600"
+exact = true
+prefixable = false
+
+# --- Angle & solid angle (dimensionless, labelled) -------------------------
+
+[units.radian]
+symbol = "rad"
+name = "radian"
+dimension = "angle"
+scale = "1"
+exact = true
+prefixable = false
+
+[units.steradian]
+symbol = "sr"
+name = "steradian"
+dimension = "solid_angle"
+scale = "1"
+exact = true
+prefixable = false
+
+[units.degree]
+symbol = "deg"
+name = "degree"
+aliases = ["°"]
+dimension = "angle"
+scale = "0.017453292519943295"
+exact = false
+prefixable = false
+
+[units.arcminute]
+symbol = "arcmin"
+name = "arcminute"
+dimension = "angle"
+scale = "2.908882086657216e-4"
+exact = false
+prefixable = false
+
+[units.arcsecond]
+symbol = "arcsec"
+name = "arcsecond"
+dimension = "angle"
+scale = "4.84813681109536e-6"
+exact = false
+prefixable = false
+
+# --- Named SI derived units ------------------------------------------------
+
+[units.hertz]
+symbol = "Hz"
+name = "hertz"
+dimension = "frequency"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.newton]
+symbol = "N"
+name = "newton"
+dimension = "force"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.pascal]
+symbol = "Pa"
+name = "pascal"
+dimension = "pressure"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.joule]
+symbol = "J"
+name = "joule"
+dimension = "energy"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.watt]
+symbol = "W"
+name = "watt"
+dimension = "power"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.coulomb]
+symbol = "C"
+name = "coulomb"
+dimension = "electric_charge"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.volt]
+symbol = "V"
+name = "volt"
+dimension = "voltage"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.farad]
+symbol = "F"
+name = "farad"
+dimension = "capacitance"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.ohm]
+symbol = "Ω"
+name = "ohm"
+aliases = ["ohm"]
+dimension = "resistance"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.siemens]
+symbol = "S"
+name = "siemens"
+dimension = "conductance"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.weber]
+symbol = "Wb"
+name = "weber"
+dimension = "magnetic_flux"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.tesla]
+symbol = "T"
+name = "tesla"
+dimension = "magnetic_flux_density"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.henry]
+symbol = "H"
+name = "henry"
+dimension = "inductance"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.lumen]
+symbol = "lm"
+name = "lumen"
+dimension = "luminous_intensity"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.lux]
+symbol = "lx"
+name = "lux"
+exponents = { J = 1, L = -2 }
+scale = "1"
+exact = true
+prefixable = true
+
+[units.becquerel]
+symbol = "Bq"
+name = "becquerel"
+dimension = "frequency"
+scale = "1"
+exact = true
+prefixable = true
+
+[units.gray]
+symbol = "Gy"
+name = "gray"
+exponents = { L = 2, T = -2 }
+scale = "1"
+exact = true
+prefixable = true
+
+[units.sievert]
+symbol = "Sv"
+name = "sievert"
+exponents = { L = 2, T = -2 }
+scale = "1"
+exact = true
+prefixable = true
+
+[units.katal]
+symbol = "kat"
+name = "katal"
+dimension = "catalytic_activity"
+scale = "1"
+exact = true
+prefixable = true
+
+# --- Temperature (affine and delta) ----------------------------------------
+
+[units.celsius]
+symbol = "°C"
+name = "degree Celsius"
+aliases = ["degC", "celsius"]
+dimension = "temperature"
+scale = "1"
+offset = "273.15"
+exact = true
+prefixable = false
+kind = "affine"
+
+[units.fahrenheit]
+symbol = "°F"
+name = "degree Fahrenheit"
+aliases = ["degF", "fahrenheit"]
+dimension = "temperature"
+scale = "5/9"
+offset = "45967/180"
+exact = true
+prefixable = false
+kind = "affine"
+
+[units.delta_celsius]
+symbol = "Δ°C"
+name = "kelvin (Celsius step)"
+aliases = ["delta_degC"]
+dimension = "temperature"
+scale = "1"
+exact = true
+prefixable = false
+kind = "delta"
+
+[units.delta_fahrenheit]
+symbol = "Δ°F"
+name = "degree Fahrenheit (step)"
+aliases = ["delta_degF"]
+dimension = "temperature"
+scale = "5/9"
+exact = true
+prefixable = false
+kind = "delta"
+
+# --- Energy ----------------------------------------------------------------
+
+[units.electronvolt]
+symbol = "eV"
+name = "electronvolt"
+dimension = "energy"
+scale = "1.602176634e-19"
+exact = true
+prefixable = true
+
+[units.hartree]
+symbol = "Ha"
+name = "hartree"
+aliases = ["hartree"]
+dimension = "energy"
+scale = "4.3597447222060e-18"
+exact = false
+prefixable = false
+
+[units.calorie]
+symbol = "cal"
+name = "thermochemical calorie"
+dimension = "energy"
+scale = "4.184"
+exact = true
+prefixable = false
+
+[units.kilocalorie]
+symbol = "kcal"
+name = "kilocalorie"
+dimension = "energy"
+scale = "4184"
+exact = true
+prefixable = false
+
+[units.erg]
+symbol = "erg"
+name = "erg"
+dimension = "energy"
+scale = "1e-7"
+exact = true
+prefixable = false
+
+# --- Pressure --------------------------------------------------------------
+
+[units.bar]
+symbol = "bar"
+name = "bar"
+dimension = "pressure"
+scale = "1e5"
+exact = true
+prefixable = true
+
+[units.atmosphere]
+symbol = "atm"
+name = "standard atmosphere"
+dimension = "pressure"
+scale = "101325"
+exact = true
+prefixable = false
+
+[units.torr]
+symbol = "torr"
+name = "torr"
+dimension = "pressure"
+scale = "101325/760"
+exact = true
+prefixable = false
+
+[units.mmHg]
+symbol = "mmHg"
+name = "millimetre of mercury"
+dimension = "pressure"
+scale = "133.322387415"
+exact = true
+prefixable = false
+
+# --- Volume ----------------------------------------------------------------
+
+[units.litre]
+symbol = "L"
+name = "litre"
+aliases = ["l", "liter", "litre"]
+dimension = "volume"
+scale = "1e-3"
+exact = true
+prefixable = true
+
+# --- Charge (atomic) -------------------------------------------------------
+
+[units.elementary_charge]
+symbol = "e"
+name = "elementary charge"
+dimension = "electric_charge"
+scale = "1.602176634e-19"
+exact = true
+prefixable = false
+
+# --- Magnetic flux density -------------------------------------------------
+
+[units.gauss]
+symbol = "G"
+name = "gauss"
+dimension = "magnetic_flux_density"
+scale = "1e-4"
+exact = true
+prefixable = false
+
+# --- Amount concentration --------------------------------------------------
+
+[units.molar]
+symbol = "M"
+name = "molar"
+aliases = ["molar"]
+dimension = "molarity"
+scale = "1000"
+exact = true
+prefixable = true
+
+# --- Scaled dimensionless --------------------------------------------------
+
+[units.percent]
+symbol = "%"
+name = "percent"
+aliases = ["percent"]
+dimension = "dimensionless"
+scale = "1/100"
+exact = true
+prefixable = false
+
+[units.ppm]
+symbol = "ppm"
+name = "parts per million"
+dimension = "dimensionless"
+scale = "1e-6"
+exact = true
+prefixable = false
