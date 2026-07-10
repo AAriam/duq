@@ -6,8 +6,10 @@
 right operand to the left operand's unit, equality is *exact* after conversion,
 and everything is immutable and hashable.
 
-Importing this module never imports NumPy; the NumPy protocol hooks are defined
-but deliberately raise until the array layer ships.
+Importing this module never imports NumPy: the scalar arithmetic path is pure
+Python, and the NumPy protocol hooks (:meth:`Quantity.__array_ufunc__`,
+:meth:`Quantity.__array_function__`, :meth:`Quantity.__array__`) import the
+:mod:`duq._numpy` back-end lazily, only when NumPy actually calls them.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from decimal import Decimal
 from fractions import Fraction
 from typing import TYPE_CHECKING, Any, Final
 
+from ._arraytypes import is_numpy_array, is_numpy_magnitude
 from ._dimension import Dimension, _coerce_exponent
 from ._errors import (
     AffineUnitError,
@@ -27,9 +30,6 @@ from ._registry import default_registry
 from ._rules import Rule, apply
 from ._unit import Factor, Unit
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 __all__ = ("Quantity", "uconvert", "ustrip")
 
 Number = int | float | complex | Fraction | Decimal
@@ -37,10 +37,20 @@ Number = int | float | complex | Fraction | Decimal
 
 Scalar = Fraction | float
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    import numpy as np
+    import numpy.typing as npt
+
+    #: A NumPy array magnitude (any dtype).
+    NDArray = npt.NDArray[Any]
+    #: Everything a :class:`Quantity` can wrap: a Python scalar, a NumPy array,
+    #: or a NumPy scalar (``numpy.generic``).
+    Magnitude = Number | NDArray | np.generic
+
 #: Avogadro constant as an exact integer Fraction (CODATA 2022, exact by SI).
 _AVOGADRO: Final[Fraction] = Fraction(602214076 * 10**15)
-
-_NUMPY_MESSAGE = "numpy support lands in duq.numpy (PR 3)"
 
 
 def _to_decimal(x: Scalar | int) -> Decimal:
@@ -54,48 +64,66 @@ def _as_complex(factor: Scalar) -> complex | float:
     return complex(float(factor)) if isinstance(factor, Fraction) else factor
 
 
-def _to_float(value: Number) -> float:
+def _to_float(value: Any) -> float:
     """Return a real float magnitude (the modulus for complex values)."""
     if isinstance(value, complex):
         return abs(value)
     return float(value)
 
 
-def _mul(value: Number, factor: Scalar) -> Number:
+def _as_array_factor(factor: Scalar) -> float | complex:
+    """Coerce a scale/offset to a float a NumPy array can combine with.
+
+    A NumPy float array multiplied by a :class:`~fractions.Fraction` silently
+    produces an ``object``-dtype array; converting the factor to ``float`` first
+    keeps the result a native numeric array.
+    """
+    return float(factor) if isinstance(factor, Fraction) else factor
+
+
+def _mul(value: Any, factor: Scalar) -> Any:
     if isinstance(value, Decimal):
         return value * _to_decimal(factor)
     if isinstance(value, complex):
         return value * _as_complex(factor)
+    if is_numpy_magnitude(value):
+        return value * _as_array_factor(factor)
     return value * factor
 
 
-def _add(value: Number, addend: Scalar) -> Number:
+def _add(value: Any, addend: Scalar) -> Any:
     if addend == 0:
         return value
     if isinstance(value, Decimal):
         return value + _to_decimal(addend)
     if isinstance(value, complex):
         return value + _as_complex(addend)
+    if is_numpy_magnitude(value):
+        return value + _as_array_factor(addend)
     return value + addend
 
 
-def _sub(value: Number, subtrahend: Scalar) -> Number:
+def _sub(value: Any, subtrahend: Scalar) -> Any:
     if subtrahend == 0:
         return value
     if isinstance(value, Decimal):
         return value - _to_decimal(subtrahend)
     if isinstance(value, complex):
         return value - _as_complex(subtrahend)
+    if is_numpy_magnitude(value):
+        return value - _as_array_factor(subtrahend)
     return value - subtrahend
 
 
-def _div(value: Number, divisor: Scalar) -> Number:
+def _div(value: Any, divisor: Scalar) -> Any:
     if divisor == 1:
         return value
     if isinstance(value, Decimal):
         return value / _to_decimal(divisor)
     if isinstance(value, complex):
         return value / _as_complex(divisor)
+    if is_numpy_magnitude(value):
+        return value / _as_array_factor(divisor)
     return value / divisor
 
 
@@ -107,32 +135,33 @@ def _avogadro_power(power: Fraction) -> Scalar:
     return inexact
 
 
-# Value-by-value arithmetic across the numeric tower.  Mixing incompatible
-# concrete types (e.g. a Decimal quantity with a float one) raises TypeError at
-# runtime, which is the intended behaviour; the localized ignores acknowledge
-# that mypy cannot prove the operands share a concrete type.
-def _num_add(a: Number, b: Number) -> Number:
-    return a + b  # type: ignore[operator]
+# Value-by-value arithmetic that is polymorphic over the whole numeric tower
+# *and* NumPy magnitudes; typed ``Any`` because a single static type cannot span
+# int/float/complex/Fraction/Decimal and ndarray simultaneously.  Mixing
+# incompatible concrete types (e.g. a Decimal with a float) raises TypeError at
+# runtime, which is the intended behaviour.
+def _num_add(a: Any, b: Any) -> Any:
+    return a + b
 
 
-def _num_sub(a: Number, b: Number) -> Number:
-    return a - b  # type: ignore[operator]
+def _num_sub(a: Any, b: Any) -> Any:
+    return a - b
 
 
-def _num_mul(a: Number, b: Number) -> Number:
-    return a * b  # type: ignore[operator]
+def _num_mul(a: Any, b: Any) -> Any:
+    return a * b
 
 
-def _num_div(a: Number, b: Number) -> Number:
-    return a / b  # type: ignore[operator]
+def _num_div(a: Any, b: Any) -> Any:
+    return a / b
 
 
-def _num_pow(a: Number, b: int | Fraction) -> Number:
-    return a**b  # type: ignore[operator]
+def _num_pow(a: Any, b: int | Fraction) -> Any:
+    return a**b
 
 
-def _num_abs(a: Number) -> Number:
-    return abs(a)  # type: ignore[return-value]
+def _num_abs(a: Any) -> Any:
+    return abs(a)
 
 
 def _unit_is_affine(unit: Unit) -> bool:
@@ -145,10 +174,15 @@ class Quantity:
 
     Parameters
     ----------
-    value : int, float, complex, fractions.Fraction or decimal.Decimal
-        The numeric magnitude.
+    value : int, float, complex, fractions.Fraction, decimal.Decimal or numpy.ndarray
+        The numeric magnitude.  A NumPy array (or NumPy scalar) is stored as-is
+        -- no copy is made -- turning the quantity into a unit-carrying array.
     unit : str or Unit
         The unit; strings are parsed against the default registry.
+
+    See Also
+    --------
+    Quantity.from_array : Build an array quantity from any array-like (e.g. a list).
 
     Examples
     --------
@@ -160,19 +194,30 @@ class Quantity:
     2.3
     >>> duq.Quantity(1.0, "km") == duq.Quantity(1000.0, "m")
     True
+
+    A NumPy array magnitude turns the quantity into a unit-carrying array; units
+    propagate through ufuncs, reductions and ``__array_function__``:
+
+    >>> import numpy as np
+    >>> q = duq.Quantity(np.array([1.0, 2.0, 3.0]), "m")
+    >>> np.sqrt(q * q).unit == duq.unit("m")
+    True
+    >>> float(q.sum().value)
+    6.0
     """
 
     __slots__ = ("_unit", "_value")
-    _value: Number
+    _value: Magnitude
     _unit: Unit
 
-    def __init__(self, value: Number, unit: str | Unit) -> None:
-        if isinstance(value, bool) or not isinstance(
-            value, int | float | complex | Fraction | Decimal
+    def __init__(self, value: Magnitude, unit: str | Unit) -> None:
+        if isinstance(value, bool) or not (
+            isinstance(value, int | float | complex | Fraction | Decimal)
+            or is_numpy_magnitude(value)
         ):
             raise TypeError(
-                f"value must be int, float, complex, Fraction or Decimal, "
-                f"not {type(value).__name__}"
+                f"value must be int, float, complex, Fraction, Decimal or a NumPy "
+                f"array, not {type(value).__name__}"
             )
         if isinstance(unit, str):
             resolved = default_registry.unit(unit)
@@ -183,15 +228,51 @@ class Quantity:
         object.__setattr__(self, "_value", value)
         object.__setattr__(self, "_unit", resolved)
 
+    @classmethod
+    def from_array(cls, value: object, unit: str | Unit) -> Quantity:
+        """Build an array quantity from any array-like magnitude.
+
+        Unlike the constructor (which requires a NumPy array or a Python scalar),
+        this coerces ``value`` with :func:`numpy.asarray`, so Python lists and
+        other sequences become array quantities.
+
+        Parameters
+        ----------
+        value : array_like
+            Anything :func:`numpy.asarray` accepts (list, tuple, ndarray, ...).
+        unit : str or Unit
+            The unit; strings are parsed against the default registry.
+
+        Returns
+        -------
+        Quantity
+            An array-backed quantity.
+
+        Examples
+        --------
+        >>> import duq
+        >>> q = duq.Quantity.from_array([1.0, 2.0, 3.0], "m")
+        >>> q.shape
+        (3,)
+        """
+        import numpy as np
+
+        return cls(np.asarray(value), unit)
+
     def __setattr__(self, name: str, value: object) -> None:  # pragma: no cover
         raise AttributeError("Quantity is immutable")
 
     # -- properties ---------------------------------------------------------
 
     @property
-    def value(self) -> Number:
+    def value(self) -> Magnitude:
         """Return the numeric magnitude."""
         return self._value
+
+    @property
+    def is_array(self) -> bool:
+        """Return whether the magnitude is a NumPy array."""
+        return is_numpy_array(self._value)
 
     @property
     def unit(self) -> Unit:
@@ -203,9 +284,10 @@ class Quantity:
         """Return the physical dimension."""
         return self._unit.dimension
 
-    def _si_value(self) -> Number:
+    def _si_value(self) -> Magnitude:
         """Return the magnitude expressed in the coherent SI unit."""
-        return _add(_mul(self._value, self._unit.scale), self._unit.offset)
+        result: Magnitude = _add(_mul(self._value, self._unit.scale), self._unit.offset)
+        return result
 
     # -- conversion ---------------------------------------------------------
 
@@ -286,7 +368,7 @@ class Quantity:
         """
         return self.to(self._unit.registry.coherent_unit(self.dimension))
 
-    def value_in(self, unit: str | Unit) -> Number:
+    def value_in(self, unit: str | Unit) -> Magnitude:
         """Return the magnitude expressed in ``unit``.
 
         Parameters
@@ -296,7 +378,7 @@ class Quantity:
 
         Returns
         -------
-        int, float, complex, fractions.Fraction or decimal.Decimal
+        int, float, complex, fractions.Fraction, decimal.Decimal or numpy.ndarray
             The converted magnitude.
 
         Examples
@@ -325,6 +407,10 @@ class Quantity:
         >>> c.value, str(c.unit)
         (1.5, 'km')
         """
+        if self.is_array:
+            raise UnsupportedOperationError(
+                "compact() is defined only for scalar quantities, not array magnitudes"
+            )
         if self._unit.is_dimensionless or self._value == 0:
             return self
         factors = self._unit.factors
@@ -478,17 +564,33 @@ class Quantity:
 
     # -- comparison ---------------------------------------------------------
 
-    def _compare_value(self, other: Quantity) -> Number:
+    def _compare_value(self, other: Quantity) -> Magnitude:
         return other.to(self._unit)._value
 
-    def __eq__(self, other: object) -> bool:
+    def _array_compare(self, other: object) -> bool:
+        """Return whether a comparison with ``other`` involves a NumPy array."""
+        if is_numpy_magnitude(self._value):
+            return True
+        if isinstance(other, Quantity):
+            return is_numpy_magnitude(other._value)
+        return is_numpy_magnitude(other)
+
+    def __eq__(self, other: object) -> bool | NDArray:  # type: ignore[override]
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("equal", self, other)
         if not isinstance(other, Quantity):
             return NotImplemented
         if self.dimension != other.dimension:
             return False
-        return self._value == self._compare_value(other)
+        return bool(self._value == self._compare_value(other))
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other: object) -> bool | NDArray:  # type: ignore[override]
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("not_equal", self, other)
         result = self.__eq__(other)
         if result is NotImplemented:
             return NotImplemented
@@ -503,19 +605,35 @@ class Quantity:
         apply(Rule.SAME_DIM, self.dimension, other.dimension)
         return op(self._value, self._compare_value(other))
 
-    def __lt__(self, other: object) -> bool:
+    def __lt__(self, other: object) -> bool | NDArray:
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("less", self, other)
         result = self._order(other, lambda a, b: a < b)
         return NotImplemented if result is None else result
 
-    def __le__(self, other: object) -> bool:
+    def __le__(self, other: object) -> bool | NDArray:
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("less_equal", self, other)
         result = self._order(other, lambda a, b: a <= b)
         return NotImplemented if result is None else result
 
-    def __gt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool | NDArray:
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("greater", self, other)
         result = self._order(other, lambda a, b: a > b)
         return NotImplemented if result is None else result
 
-    def __ge__(self, other: object) -> bool:
+    def __ge__(self, other: object) -> bool | NDArray:
+        if self._array_compare(other):
+            from ._numpy import richcompare
+
+            return richcompare("greater_equal", self, other)
         result = self._order(other, lambda a, b: a >= b)
         return NotImplemented if result is None else result
 
@@ -544,6 +662,10 @@ class Quantity:
         >>> a.allclose(b)
         True
         """
+        if self.is_array or other.is_array:
+            raise UnsupportedOperationError(
+                "Quantity.allclose is for scalars; use numpy.allclose on array quantities"
+            )
         apply(Rule.SAME_DIM, self.dimension, other.dimension)
         return math.isclose(
             _to_float(self._value),
@@ -552,15 +674,242 @@ class Quantity:
             abs_tol=abs_tol,
         )
 
-    # -- numpy stubs (fail loud until PR 3) ---------------------------------
+    # -- numpy protocol (NEP 13 / NEP 18) -----------------------------------
 
-    def __array_ufunc__(self, *args: object, **kwargs: object) -> object:
-        """Reject NumPy ufuncs until the array layer ships."""
-        raise UnsupportedOperationError(_NUMPY_MESSAGE)
+    def __array_ufunc__(
+        self, ufunc: object, method: str, *inputs: object, **kwargs: object
+    ) -> object:
+        """Dispatch a NumPy ufunc through the curated duq unit-rule table.
 
-    def __array_function__(self, *args: object, **kwargs: object) -> object:
-        """Reject NumPy functions until the array layer ships."""
-        raise UnsupportedOperationError(_NUMPY_MESSAGE)
+        Any ufunc/method without a registered rule -- and any ``out=`` argument
+        -- raises :class:`~duq.UnsupportedOperationError`; units are never
+        silently dropped.
+        """
+        from ._numpy import dispatch_ufunc
+
+        return dispatch_ufunc(ufunc, method, inputs, kwargs)
+
+    def __array_function__(
+        self,
+        func: Callable[..., object],
+        types: object,
+        args: tuple[object, ...],
+        kwargs: dict[str, object],
+    ) -> object:
+        """Dispatch a NumPy function through the curated duq unit-rule table."""
+        from ._numpy import dispatch_function
+
+        return dispatch_function(func, types, args, kwargs)
+
+    def __array__(self, dtype: object = None, copy: object = None) -> object:
+        """Refuse silent unit-stripping conversion to a bare NumPy array.
+
+        Closing this classic hole is a design goal: ``numpy.array(q)`` and
+        ``numpy.asarray(q)`` must never quietly discard the unit.  Use
+        :func:`duq.ustrip` (or :attr:`value`) to obtain the raw magnitude.
+        """
+        raise UnsupportedOperationError(
+            "refusing to convert a Quantity to a bare NumPy array, which would "
+            "silently drop its unit; use duq.ustrip(unit, q) to get the magnitude "
+            "in a chosen unit (or q.value for the stored magnitude)"
+        )
+
+    def __matmul__(self, other: object) -> object:
+        from ._numpy import matmul
+
+        return matmul(self, other)
+
+    def __rmatmul__(self, other: object) -> object:
+        from ._numpy import matmul
+
+        return matmul(other, self)
+
+    # -- array introspection ------------------------------------------------
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Return the shape of the magnitude (``()`` for a scalar magnitude).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> duq.Quantity(np.zeros((2, 3)), "m").shape
+        (2, 3)
+        """
+        from ._numpy import magnitude_shape
+
+        return magnitude_shape(self._value)
+
+    @property
+    def ndim(self) -> int:
+        """Return the number of magnitude dimensions (``0`` for a scalar)."""
+        from ._numpy import magnitude_ndim
+
+        return magnitude_ndim(self._value)
+
+    @property
+    def size(self) -> int:
+        """Return the number of magnitude elements (``1`` for a scalar)."""
+        from ._numpy import magnitude_size
+
+        return magnitude_size(self._value)
+
+    @property
+    def dtype(self) -> np.dtype[Any]:
+        """Return the NumPy dtype of the magnitude (array magnitudes only)."""
+        from ._numpy import magnitude_dtype
+
+        return magnitude_dtype(self._value)
+
+    @property
+    def T(self) -> Quantity:  # noqa: N802 - mirrors ``ndarray.T``
+        """Return the transposed quantity (unit preserved).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> duq.Quantity(np.zeros((2, 3)), "m").T.shape
+        (3, 2)
+        """
+        from ._numpy import q_transpose
+
+        return q_transpose(self)
+
+    def __len__(self) -> int:
+        from ._numpy import magnitude_len
+
+        return magnitude_len(self._value)
+
+    def __iter__(self) -> Iterator[Quantity]:
+        from ._numpy import iter_quantity
+
+        return iter_quantity(self)
+
+    def __getitem__(self, key: object) -> Quantity:
+        from ._numpy import get_item
+
+        return get_item(self, key)
+
+    def item(self, *args: object) -> Quantity:
+        """Return a single element as a scalar :class:`Quantity` (unit preserved).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> duq.Quantity(np.array([5.0]), "m").item().value
+        5.0
+        """
+        from ._numpy import scalar_item
+
+        return scalar_item(self, args)
+
+    # -- array reductions / reshaping (thin delegates) ----------------------
+
+    def sum(self, **kwargs: object) -> Quantity:
+        """Sum the magnitude, preserving the unit (see :func:`numpy.sum`).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> float(duq.Quantity(np.array([1.0, 2.0, 3.0]), "m").sum().value)
+        6.0
+        """
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "sum", kwargs)
+
+    def mean(self, **kwargs: object) -> Quantity:
+        """Average the magnitude, preserving the unit (see :func:`numpy.mean`)."""
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "mean", kwargs)
+
+    def std(self, **kwargs: object) -> Quantity:
+        """Return the standard deviation, preserving the unit (see :func:`numpy.std`)."""
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "std", kwargs)
+
+    def var(self, **kwargs: object) -> Quantity:
+        """Return the variance, squaring the unit (see :func:`numpy.var`).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> duq.Quantity(np.array([1.0, 2.0, 3.0]), "m").var().unit == duq.unit("m^2")
+        True
+        """
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "var", kwargs, unit_power=2)
+
+    def min(self, **kwargs: object) -> Quantity:
+        """Return the minimum, preserving the unit (see :func:`numpy.min`)."""
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "min", kwargs)
+
+    def max(self, **kwargs: object) -> Quantity:
+        """Return the maximum, preserving the unit (see :func:`numpy.max`)."""
+        from ._numpy import q_reduce
+
+        return q_reduce(self, "max", kwargs)
+
+    def reshape(self, *shape: object, **kwargs: object) -> Quantity:
+        """Reshape the magnitude, preserving the unit (see :func:`numpy.reshape`).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import duq
+        >>> duq.Quantity(np.arange(6.0), "m").reshape(2, 3).shape
+        (2, 3)
+        """
+        from ._numpy import q_reshape
+
+        return q_reshape(self, shape, kwargs)
+
+    def ravel(self, **kwargs: object) -> Quantity:
+        """Flatten the magnitude, preserving the unit (see :func:`numpy.ravel`)."""
+        from ._numpy import q_ravel
+
+        return q_ravel(self, kwargs)
+
+    def astype(self, dtype: object, **kwargs: object) -> Quantity:
+        """Cast the magnitude to ``dtype``, preserving the unit."""
+        from ._numpy import q_astype
+
+        return q_astype(self, dtype, kwargs)
+
+    # -- scalar coercion (fail loud, never silently strip) ------------------
+
+    def __bool__(self) -> bool:
+        # Defined explicitly so that adding ``__len__`` (for array magnitudes)
+        # does not make ``bool(scalar_quantity)`` fall back to ``__len__``.
+        return bool(self._value)
+
+    def __float__(self) -> float:
+        raise UnsupportedOperationError(
+            "refusing to coerce a Quantity to a bare float, which would drop its "
+            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
+        )
+
+    def __int__(self) -> int:
+        raise UnsupportedOperationError(
+            "refusing to coerce a Quantity to a bare int, which would drop its "
+            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
+        )
+
+    def __complex__(self) -> complex:
+        raise UnsupportedOperationError(
+            "refusing to coerce a Quantity to a bare complex, which would drop its "
+            "unit; use duq.ustrip(unit, q) to get the magnitude in a chosen unit"
+        )
 
     # -- rendering ----------------------------------------------------------
 
@@ -595,7 +944,7 @@ def uconvert(unit: str | Unit, q: Quantity) -> Quantity:
     return q.to(unit)
 
 
-def ustrip(unit: str | Unit, q: Quantity) -> Number:
+def ustrip(unit: str | Unit, q: Quantity) -> Magnitude:
     """Return a quantity's magnitude in a unit (unit-first, JAX-idiomatic).
 
     Parameters
@@ -607,7 +956,7 @@ def ustrip(unit: str | Unit, q: Quantity) -> Number:
 
     Returns
     -------
-    int, float, complex, fractions.Fraction or decimal.Decimal
+    int, float, complex, fractions.Fraction, decimal.Decimal or numpy.ndarray
         The bare magnitude in ``unit``.
 
     Examples
