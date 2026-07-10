@@ -1,0 +1,116 @@
+# Physical dimensions catalogue for duq.
+#
+# The seven SI base dimensions are listed in SI-brochure order.  Named derived
+# dimensions give their decomposition as a mapping of base-dimension symbol to
+# exponent; omitted symbols have exponent zero.
+#
+# Base symbols: T (time), L (length), M (mass), I (electric current),
+# Θ (thermodynamic temperature), N (amount of substance), J (luminous
+# intensity).
+
+[base.time]
+symbol = "T"
+
+[base.length]
+symbol = "L"
+
+[base.mass]
+symbol = "M"
+
+[base.electric_current]
+symbol = "I"
+
+[base.temperature]
+symbol = "Θ"
+
+[base.amount]
+symbol = "N"
+
+[base.luminous_intensity]
+symbol = "J"
+
+# --- Named derived dimensions ---------------------------------------------
+
+[derived.dimensionless]
+exponents = {}
+
+[derived.angle]
+exponents = {}
+
+[derived.solid_angle]
+exponents = {}
+
+[derived.area]
+exponents = { L = 2 }
+
+[derived.volume]
+exponents = { L = 3 }
+
+[derived.frequency]
+exponents = { T = -1 }
+
+[derived.velocity]
+exponents = { L = 1, T = -1 }
+
+[derived.acceleration]
+exponents = { L = 1, T = -2 }
+
+[derived.momentum]
+exponents = { M = 1, L = 1, T = -1 }
+
+[derived.force]
+exponents = { M = 1, L = 1, T = -2 }
+
+[derived.pressure]
+exponents = { M = 1, L = -1, T = -2 }
+
+[derived.energy]
+exponents = { M = 1, L = 2, T = -2 }
+
+[derived.power]
+exponents = { M = 1, L = 2, T = -3 }
+
+[derived.action]
+exponents = { M = 1, L = 2, T = -1 }
+
+[derived.electric_charge]
+exponents = { I = 1, T = 1 }
+
+[derived.voltage]
+exponents = { M = 1, L = 2, T = -3, I = -1 }
+
+[derived.capacitance]
+exponents = { M = -1, L = -2, T = 4, I = 2 }
+
+[derived.resistance]
+exponents = { M = 1, L = 2, T = -3, I = -2 }
+
+[derived.conductance]
+exponents = { M = -1, L = -2, T = 3, I = 2 }
+
+[derived.magnetic_flux]
+exponents = { M = 1, L = 2, T = -2, I = -1 }
+
+[derived.magnetic_flux_density]
+exponents = { M = 1, T = -2, I = -1 }
+
+[derived.inductance]
+exponents = { M = 1, L = 2, T = -2, I = -2 }
+
+[derived.catalytic_activity]
+exponents = { N = 1, T = -1 }
+
+[derived.density]
+exponents = { M = 1, L = -3 }
+
+[derived.molarity]
+exponents = { N = 1, L = -3 }
+
+[derived.molar_energy]
+exponents = { M = 1, L = 2, T = -2, N = -1 }
+
+[derived.entropy]
+exponents = { M = 1, L = 2, T = -2, "Θ" = -1 }
+
+[derived.dynamic_viscosity]
+exponents = { M = 1, L = -1, T = -1 }
