@@ -60,6 +60,23 @@ Known limitations
   with that function's traced arguments splits the unit bookkeeping across
   trace levels; prefer the :func:`duq.jax.grad`-family wrappers, or pass all
   quantities as arguments when using raw ``quax.quaxify``.
+- **Bare (unit-less) operands in selection/update ops differ from the NumPy
+  layer.**  ``np.where(cond, q, bare_array)`` raises
+  :class:`~duq.DimensionalityError` in the NumPy back-end -- a bare operand
+  never silently acquires a unit -- whereas ``duq.jax.numpy.where`` lets the
+  bare operand *adopt* the quantity's unit (same for ``pad``, ``scatter`` and
+  ``dynamic_update_slice``).  This is a constraint of primitive-level
+  interception, not a choice: after tracing, a ``jit``-internal literal is
+  indistinguishable from a user-provided bare array, so the JAX layer cannot
+  reject bare operands without breaking legitimate compiled code (``unxt``
+  behaves the same).  Wrap the operand in a :class:`Quantity` to get the
+  strict check::
+
+      import jax.numpy as jnp
+      import duq.jax, duq.jax.numpy as djnp
+      q = duq.jax.Quantity(jnp.array([1.0, 2.0]), "m")
+      djnp.where(jnp.array([True, False]), q, jnp.array([3.0, 4.0]))
+      # -> Quantity([1., 4.], "m")   the bare [3., 4.] is taken as metres
 """
 
 from __future__ import annotations
