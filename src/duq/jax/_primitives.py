@@ -45,7 +45,7 @@ from duq._unit import Unit
 from ._quantity import Quantity
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Iterable
 
 __all__ = ("PRIMITIVE_COVERAGE",)
 
@@ -220,16 +220,14 @@ def _sub_aq(x: ArrayLike, y: Quantity, **params: Any) -> Quantity:
     return _add_sub(lax.sub_p, x, y, params, -1)
 
 
-_record(lax.sub_p, "same dimension; °C − °C yields the coherent SI difference (K)")
+_record(lax.sub_p, "same dimension; degC - degC yields the coherent SI difference (K)")
 
 
 def _same_dim(prim: Any, x: object, y: object, params: dict[str, Any]) -> Quantity:
     """Bind a same-dimension primitive; the result keeps the reference unit."""
     reference = _unit_of(x) or _unit_of(y)
     assert reference is not None  # dispatch guarantees a Quantity operand
-    return Quantity(
-        prim.bind(_to_unit(x, reference), _to_unit(y, reference), **params), reference
-    )
+    return Quantity(prim.bind(_to_unit(x, reference), _to_unit(y, reference), **params), reference)
 
 
 def _register_same_dim(prim: Any, description: str) -> None:
@@ -621,7 +619,7 @@ _register_compare(lax.le_to_p, "order", "total-order compare (converted)")
 # -- n-ary structure ----------------------------------------------------------------------
 
 
-def _first_unit(xs: Sequence[object]) -> Unit | None:
+def _first_unit(xs: Iterable[object]) -> Unit | None:
     for x in xs:
         if isinstance(x, Quantity):
             return x.unit
@@ -654,11 +652,13 @@ _record(lax.stack_p, "all operands converted to the first quantity's unit")
 
 @quax.register(lax.select_n_p)
 def _select_n(pred: ArrayLike, *cases: Quantity | ArrayLike, **params: Any) -> Quantity | Any:
-    # Plain branches pass raw and adopt the reference unit (unxt-parity): the
-    # jax.numpy compositions (var, hypot, trunc, take, ...) select against
-    # internal literals that are already traced inside jit and cannot be
-    # inspected for scale invariance.
-    unit = _first_unit(cases)
+    # The reference unit is the LAST quantity case: ``jnp.where(c, x, y)``
+    # lowers to ``select_n(c, y, x)``, so this matches the NumPy layer's
+    # ``np.where`` (unit of ``x``).  Plain branches pass raw and adopt the
+    # reference unit (unxt parity): jax.numpy compositions (var, hypot,
+    # trunc, take, ...) select against internal literals that are already
+    # traced inside jit and cannot be inspected for scale invariance.
+    unit = _first_unit(reversed(cases))
     if unit is None:
         return lax.select_n_p.bind(pred, *cases, **params)
     mags = [_to_unit(case, unit) if isinstance(case, Quantity) else case for case in cases]
@@ -667,15 +667,15 @@ def _select_n(pred: ArrayLike, *cases: Quantity | ArrayLike, **params: Any) -> Q
 
 _record(
     lax.select_n_p,
-    "quantity branches converted to the first quantity's unit; plain branches "
-    "adopt it; predicate plain",
+    "quantity branches converted to the last quantity case's unit (np.where "
+    "parity); plain branches adopt it; predicate plain",
 )
 
 
 @quax.register(lax.sort_p)
 def _sort(*xs: Quantity | ArrayLike, **params: Any) -> list[Any]:
     units = [_unit_of(x) for x in xs]
-    outs = lax.sort_p.bind(*(_mag(x) for x in xs), **params)
+    outs = lax.sort_p.bind(*(_mag(x) for x in xs), **params)  # type: ignore[no-untyped-call]
     return [
         Quantity(out, unit) if unit is not None else out
         for out, unit in zip(outs, units, strict=True)
@@ -687,7 +687,7 @@ _record(lax.sort_p, "per-operand; each output keeps its operand's unit")
 
 @quax.register(lax.split_p)
 def _split(x: Quantity, **params: Any) -> list[Any]:
-    outs = lax.split_p.bind(x.magnitude, **params)
+    outs = lax.split_p.bind(x.magnitude, **params)  # type: ignore[no-untyped-call]
     return [Quantity(out, x.unit) for out in outs]
 
 
@@ -696,9 +696,7 @@ _record(lax.split_p, "structural; unit preserved on every output")
 
 @quax.register(lax.pad_p)
 def _pad_qq(x: Quantity, padding_value: Quantity, **params: Any) -> Quantity:
-    return Quantity(
-        lax.pad_p.bind(x.magnitude, _to_unit(padding_value, x.unit), **params), x.unit
-    )
+    return Quantity(lax.pad_p.bind(x.magnitude, _to_unit(padding_value, x.unit), **params), x.unit)
 
 
 @quax.register(lax.pad_p)

@@ -125,7 +125,7 @@ def _is_nested_quantity(x: object) -> bool:
     return isinstance(x, Quantity) and isinstance(x.magnitude, Quantity)
 
 
-def _jacobian_like(transform: Callable[..., Any]) -> Callable[..., Any]:
+def _jacobian_like(transform: Callable[..., Any]) -> Callable[..., Callable[..., Any]]:
     """Build a unit-collapsing wrapper factory around a JAX Jacobian transform."""
 
     def factory(fun: Callable[..., Any], **kwargs: Any) -> Callable[..., Any]:

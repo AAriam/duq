@@ -16,8 +16,10 @@ import equinox as eqx
 import jax
 import jax.core
 import jax.numpy as jnp
+import numpy as np
 import quax
 
+from duq._dimension import Dimension
 from duq._errors import (
     AffineUnitError,
     DimensionalityError,
@@ -31,8 +33,6 @@ from duq._unit import Unit
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-
-    from duq._dimension import Dimension
 
 __all__ = ("Quantity",)
 
@@ -109,6 +109,11 @@ class Quantity(quax.ArrayValue):
 
     magnitude: jax.Array
     unit: Unit = eqx.field(static=True)
+
+    #: Opt out of NumPy's ufunc machinery so ``ndarray * q`` (etc.) defers to
+    #: the reflected operators instead of calling ``np.asarray`` on the
+    #: quantity (which fails loud by design).
+    __array_ufunc__ = None
 
     def __init__(self, value: Any, unit: str | Unit) -> None:
         if isinstance(value, CoreQuantity):
@@ -217,8 +222,6 @@ class Quantity(quax.ArrayValue):
         src_n = self.dimension.exponents["N"]
         tgt_n = target.dimension.exponents["N"]
         k = tgt_n - src_n
-        from duq._dimension import Dimension
-
         if self.dimension * Dimension({"N": k}) != target.dimension:
             raise DimensionalityError(
                 "molar equivalence requires the dimensions to differ only by a "
@@ -285,8 +288,6 @@ class Quantity(quax.ArrayValue):
         >>> duq.jax.Quantity([1.0, 2.0], "m").to_core().is_array
         True
         """
-        import numpy as np
-
         return CoreQuantity(np.asarray(self.magnitude), self.unit)
 
     # -- scalar coercion (dimensionless converts; dimensional fails loud) -----
@@ -411,8 +412,9 @@ class Quantity(quax.ArrayValue):
     def __ge__(self, other: object) -> jax.Array:
         return self._binary(_greater_equal, self, other)  # type: ignore[no-any-return]
 
-    # Defining __eq__ makes the class unhashable (like numpy.ndarray); the
-    # static *unit* stays hashable, which is all jit's cache key needs.
+    # Array quantities are unhashable, exactly like numpy.ndarray; the static
+    # *unit* stays hashable, which is all jit's cache key needs.
+    __hash__ = None  # type: ignore[assignment]
 
     # -- array ergonomics -------------------------------------------------------
 
