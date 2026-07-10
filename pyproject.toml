@@ -40,7 +40,10 @@ classifiers = [
 dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
-jax = ["jax>=0.5"]
+# quax is single-maintainer and on the 0.3.x line (research report Risk #4), so
+# it is pinned with an upper bound; equinox provides the Module/pytree base quax
+# builds on.
+jax = ["jax>=0.5", "quax>=0.3.6,<0.5", "equinox>=0.11"]
 
 [project.urls]
 Repository = "https://github.com/AAriam/duq"
@@ -104,6 +107,13 @@ platforms = ["osx-64", "osx-arm64", "linux-64"]
 
 [tool.pixi.feature.jax.dependencies]
 jax = ">=0.5"
+# equinox is on conda-forge; quax is not, so it is added below as a PyPI dep.
+equinox = ">=0.11"
+
+[tool.pixi.feature.jax.pypi-dependencies]
+# quax is not packaged on conda-forge, so it comes from PyPI; the upper bound
+# mirrors the pyproject [project.optional-dependencies] jax pin.
+quax = ">=0.3.6,<0.5"
 
 # NumPy 1.26 pin: guards the NEP-13/18 behaviour differences (and the
 # trapz/trapezoid rename) between NumPy 1.26 and 2.x on the minimum Python.

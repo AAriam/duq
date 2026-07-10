@@ -19,7 +19,7 @@ from decimal import Decimal
 from fractions import Fraction
 from typing import TYPE_CHECKING, Any, Final
 
-from ._arraytypes import is_numpy_array, is_numpy_magnitude
+from ._arraytypes import is_jax_like, is_numpy_array, is_numpy_magnitude
 from ._dimension import Dimension, _coerce_exponent
 from ._errors import (
     AffineUnitError,
@@ -215,6 +215,12 @@ class Quantity:
             isinstance(value, int | float | complex | Fraction | Decimal)
             or is_numpy_magnitude(value)
         ):
+            if is_jax_like(value):
+                raise TypeError(
+                    "duq.Quantity cannot wrap a JAX array or tracer; use "
+                    "duq.jax.Quantity for jit/grad/vmap-safe unit-carrying arrays "
+                    "(pip install duq[jax])"
+                )
             raise TypeError(
                 f"value must be int, float, complex, Fraction, Decimal or a NumPy "
                 f"array, not {type(value).__name__}"
