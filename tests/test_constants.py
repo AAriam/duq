@@ -14,7 +14,7 @@ NIST_2022 = [
     ("e", 1.602176634e-19, "C"),
     ("k_B", 1.380649e-23, "J/K"),
     ("N_A", 6.02214076e23, "1/mol"),
-    ("R", 8.314462618, "J/(mol.K)"),
+    ("R", 8.31446261815324, "J/(mol.K)"),
     ("alpha", 7.2973525643e-3, "1"),
     ("m_e", 9.1093837139e-31, "kg"),
     ("m_p", 1.67262192595e-27, "kg"),
@@ -54,7 +54,15 @@ def test_boltzmann_exponent_is_minus_23() -> None:
 
 def test_derived_relationship_r_equals_na_kb() -> None:
     product = duq.constants.N_A * duq.constants.k_B
-    assert product.to("J/(mol.K)").value == pytest.approx(8.314462618, rel=1e-9)
+    assert product.to("J/(mol.K)").value == pytest.approx(8.31446261815324, rel=1e-12)
+
+
+def test_r_stores_full_exact_decimal() -> None:
+    # R = N_A * k_B is an exact finite decimal: 8.31446261815324 J/(mol.K).
+    assert duq.constants.R.value == 8.31446261815324
+    assert duq.constants.R.value == pytest.approx(
+        duq.constants.N_A.value * duq.constants.k_B.value, rel=1e-15
+    )
 
 
 def test_info_metadata() -> None:

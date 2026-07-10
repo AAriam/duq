@@ -21,6 +21,8 @@ value = "6.62607015e-34"
 unit = "J.s"
 uncertainty = "exact"
 
+# Exact by definition (h / 2π) but irrational; the decimal below is the
+# NIST-displayed truncation of the exact value.
 [codata2022.hbar]
 name = "reduced Planck constant"
 symbol = "ħ"
@@ -49,10 +51,11 @@ value = "6.02214076e23"
 unit = "1/mol"
 uncertainty = "exact"
 
+# R = N_A * k_B is an exact finite decimal; full digits stored.
 [codata2022.R]
 name = "molar gas constant"
 symbol = "R"
-value = "8.314462618"
+value = "8.31446261815324"
 unit = "J/(mol.K)"
 uncertainty = "exact"
 
@@ -119,6 +122,8 @@ value = "9.80665"
 unit = "m/s^2"
 uncertainty = "exact"
 
+# Exact by definition (2π⁵k_B⁴ / (15 h³ c²)) but irrational; the decimal
+# below is the NIST-displayed truncation of the exact value.
 [codata2022.sigma_SB]
 name = "Stefan-Boltzmann constant"
 symbol = "σ"
