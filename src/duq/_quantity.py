@@ -135,6 +135,11 @@ def _num_abs(a: Number) -> Number:
     return abs(a)  # type: ignore[return-value]
 
 
+def _unit_is_affine(unit: Unit) -> bool:
+    """Return whether a unit is affine (non-zero offset or an affine atom)."""
+    return unit.offset != 0 or any(f.atom.kind == "affine" for f in unit.factors)
+
+
 class Quantity:
     """An immutable scalar value with a physical unit.
 
@@ -247,6 +252,11 @@ class Quantity:
         return Quantity(new_value, target)
 
     def _to_molar(self, target: Unit) -> Quantity:
+        if _unit_is_affine(self._unit) or _unit_is_affine(target):
+            raise AffineUnitError(
+                "molar equivalence is undefined for affine units such as °C or °F; "
+                "convert to an absolute unit (e.g. K) first"
+            )
         src_n = self.dimension.exponents["N"]
         tgt_n = target.dimension.exponents["N"]
         k = tgt_n - src_n

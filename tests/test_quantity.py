@@ -119,6 +119,20 @@ def test_molar_equivalence_refuses_non_amount_difference() -> None:
         Quantity(1.0, "J").to("m", equivalence="molar")
 
 
+def test_molar_equivalence_rejects_affine_units() -> None:
+    # Regression: the affine offset was silently dropped (25 degC "became" 25 K).
+    with pytest.raises(duq.AffineUnitError, match="molar equivalence is undefined"):
+        Quantity(25.0, "degC").to("K", equivalence="molar")
+    with pytest.raises(duq.AffineUnitError, match="molar equivalence is undefined"):
+        Quantity(298.15, "K").to("degC", equivalence="molar")
+
+
+def test_molar_equivalence_with_zero_k_is_plain_conversion() -> None:
+    converted = Quantity(1.0, "km").to("m", equivalence="molar")
+    assert converted.value == 1000.0
+    assert converted == Quantity(1.0, "km").to("m")
+
+
 def test_multiplication_and_division() -> None:
     energy = Quantity(2.0, "kJ/mol") * Quantity(3.0, "mol")
     assert energy.value == 6.0
