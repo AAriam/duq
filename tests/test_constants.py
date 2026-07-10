@@ -60,9 +60,11 @@ def test_derived_relationship_r_equals_na_kb() -> None:
 def test_r_stores_full_exact_decimal() -> None:
     # R = N_A * k_B is an exact finite decimal: 8.31446261815324 J/(mol.K).
     assert duq.constants.R.value == 8.31446261815324
-    assert duq.constants.R.value == pytest.approx(
-        duq.constants.N_A.value * duq.constants.k_B.value, rel=1e-15
-    )
+    avogadro = duq.constants.N_A.value
+    boltzmann = duq.constants.k_B.value
+    assert isinstance(avogadro, float)
+    assert isinstance(boltzmann, float)
+    assert duq.constants.R.value == pytest.approx(avogadro * boltzmann, rel=1e-15)
 
 
 def test_info_metadata() -> None:
