@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **JAX integration — jit/grad/vmap-safe unit-carrying arrays (`duq[jax]`,
+  quax primitive interception):**
+  - New `duq.jax.Quantity`: a `quax.ArrayValue` (equinox pytree) whose
+    magnitude is the traced leaf and whose unit is a **static** field, so the
+    unit is checked and propagated at trace time, participates in `jit`'s
+    cache key (same unit → cached; new unit → retrace), and costs nothing at
+    runtime. Construction from anything `jnp.asarray` accepts, plus
+    `Quantity.from_core(q)`/`q.to_core()` to cross between the NumPy core and
+    JAX; the core `duq.Quantity` now rejects JAX arrays/tracers with a pointer
+    to `duq.jax.Quantity` (without importing JAX).
+  - 93 `lax` primitives registered through the shared `duq._rules` engine —
+    arithmetic with the core affine (`°C`) policy, unit powers
+    (`integer_pow`/`sqrt`/`rsqrt`/`cbrt`/`square`), dimensionless/angle rules
+    (`%` and `deg` rescaled at trace time), converted comparisons
+    (`==`/`!=` on incompatible dimensions → all-False/all-True, matching the
+    NumPy layer), n-ary structure (`concatenate`/`stack`/`select_n`/`sort`/
+    `split`/`pad`/`gather`/`scatter*`), reductions (`reduce_prod` →
+    `unit ** n` via static shapes) and `dot_general` — see
+    `docs/dev/jax_coverage.md` (generated, test-enforced). Control flow
+    (`scan`/`while`/`cond`) keeps units in carries and branches via quax.
+  - Fail-loud everywhere: `materialise()` refuses, and any uncovered
+    primitive raises `UnsupportedOperationError` **naming the primitive**;
+    `np.asarray(q)`/`float(q)`-style coercions follow the core policy
+    (dimensionless converts, dimensional raises with `ustrip` guidance).
+  - `duq.jax.numpy`: a lazily quaxified mirror of `jax.numpy` (including
+    proxied submodules such as `linalg` and curated unit-aware
+    `deg2rad`/`rad2deg` overrides), plus full Python operator support and a
+    unit-aware `.at[...]` indexed-update helper on the quantity itself.
+  - Unit-aware transformation wrappers: `duq.jax.grad`/`jacfwd`/`jacrev`/
+    `hessian` label derivatives with the exact `unit_out / unit_in` unit
+    (Hessians with `unit_out / unit_in²`); `duq.jax.jit`/`vmap` document the
+    pytree pathway (plain `jax.jit`/`jax.vmap` work directly on quantities).
+  - `duq.uconvert`/`duq.ustrip` now dispatch structurally on any
+    quantity flavour via the new `duq.QuantityLike` protocol.
+  - Packaging: the `jax` extra pins `quax>=0.3.6,<0.5` (single-maintainer
+    risk) and `equinox>=0.11`; the pixi `test-jax` environment gets quax from
+    PyPI (not on conda-forge) and CI enforces a dedicated ≥90% coverage gate
+    on `src/duq/jax` (the global 95% gate covers everything else).
+    `import duq` still never imports JAX, and `import duq.jax` without the
+    extra raises a helpful `ImportError` (both asserted by tests).
 - **NumPy integration — unit-carrying arrays (NEP 13 / NEP 18):**
   - The existing `Quantity` now also wraps a NumPy array (or NumPy scalar) as its
     magnitude (`Quantity(np.array(...), unit)`, or `Quantity.from_array([...],
