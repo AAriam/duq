@@ -83,3 +83,16 @@ jobs:
           cache: true
       - name: Run tests with JAX installed (duq/jax coverage gate ≥90%)
         run: pixi run -e test-jax test-jax
+
+  docs:
+    name: Docs build (strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.72.0
+          environments: docs
+          cache: true
+      - name: Build the documentation site
+        run: pixi run -e docs docs-build

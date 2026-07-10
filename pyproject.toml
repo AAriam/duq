@@ -133,6 +133,36 @@ quax = ">=0.3.6,<0.5"
 # >=90% gate on src/duq/jax via its own coverage config.
 test-jax = { cmd = "pytest --cov --cov-config=coverage-jax.toml", default-environment = "test-jax" }
 
+# Notebook execution tooling (used by the test-jax env to run docs/notebooks/*
+# top-to-bottom; not exercised in CI).
+[tool.pixi.feature.notebooks.dependencies]
+nbconvert = "*"
+nbformat = "*"
+ipykernel = "*"
+
+# Documentation site: mkdocs-material + mkdocstrings (numpy docstring style) and
+# the pymdown extensions used by the theme/snippets. Build-only, no deployment.
+[tool.pixi.feature.docs.dependencies]
+mkdocs-material = "*"
+mkdocstrings-python = "*"
+pymdown-extensions = "*"
+# Optional: lets mkdocstrings pretty-format rendered signatures.
+ruff = "*"
+
+[tool.pixi.feature.docs.tasks]
+docs-build = "mkdocs build --strict"
+docs-serve = "mkdocs serve"
+
+# Release-artifact tooling: build the sdist+wheel and check them with twine.
+# Publishing is intentionally NOT wired up here (see RELEASING.md).
+[tool.pixi.feature.build.dependencies]
+python-build = "*"
+twine = "*"
+
+[tool.pixi.feature.build.tasks]
+build = "python -m build"
+twine-check = { cmd = "twine check dist/*", depends-on = ["build"] }
+
 # NumPy 1.26 pin: guards the NEP-13/18 behaviour differences (and the
 # trapz/trapezoid rename) between NumPy 1.26 and 2.x on the minimum Python.
 [tool.pixi.feature.np126.dependencies]
@@ -156,7 +186,11 @@ python = "3.14.*"
 [tool.pixi.environments]
 default = { solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
-test-jax = { features = ["test", "jax"] }
+# test-jax also carries the notebook tooling so docs/notebooks/* execute in the
+# same environment the JAX examples are verified against.
+test-jax = { features = ["test", "jax", "notebooks"] }
+docs = { features = ["docs"], solve-group = "default" }
+build = { features = ["build"], no-default-feature = true }
 lint = { features = ["lint"], no-default-feature = true }
 # Type-check against the minimum supported Python (matches mypy's python_version).
 type = { features = ["type", "py311"], no-default-feature = true }
