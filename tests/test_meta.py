@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 from fractions import Fraction
@@ -18,6 +19,42 @@ def test_import_does_not_import_numpy() -> None:
         "_ = q.to('J'); _ = duq.constants.k_B; _ = duq.unit('kg.m^2/s^2')\n"
         "assert 'numpy' not in sys.modules, 'numpy was imported by the core'\n"
         "print('ok')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "ok"
+
+
+def test_import_does_not_import_jax() -> None:
+    code = (
+        "import sys, duq\n"
+        "q = duq.Quantity(2.0, 'kJ/mol') * duq.Quantity(3.0, 'mol')\n"
+        "_ = q.to('J'); _ = duq.unit('kg.m^2/s^2')\n"
+        "assert 'jax' not in sys.modules, 'jax was imported by the core'\n"
+        "print('ok')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "ok"
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("jax") is not None,
+    reason="jax is installed; the ImportError path only exists without it",
+)
+def test_import_duq_jax_without_jax_raises_helpful_error() -> None:
+    code = (
+        "try:\n"
+        "    import duq.jax\n"
+        "except ImportError as exc:\n"
+        "    assert 'duq[jax]' in str(exc), str(exc)\n"
+        "    print('ok')\n"
+        "else:\n"
+        "    print('no error')\n"
     )
     result = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=False
