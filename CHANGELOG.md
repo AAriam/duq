@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **NumPy integration — unit-carrying arrays (NEP 13 / NEP 18):**
+  - The existing `Quantity` now also wraps a NumPy array (or NumPy scalar) as its
+    magnitude (`Quantity(np.array(...), unit)`, or `Quantity.from_array([...],
+    unit)` for lists); the array is stored as-is, with no copy.
+  - `Quantity.__array_ufunc__` and `__array_function__` carry units through a
+    curated ufunc table (~70 ufuncs) and function table (~130 functions), driven
+    by the shared `duq._rules` engine: `multiply`/`matmul`→product,
+    `divide`/`floor_divide`→quotient, `add`/`subtract`/`hypot`/`maximum`/… →
+    same-dimension (right operand converted to the left unit), `power`/`sqrt`/
+    `cbrt`/`square`/`reciprocal`→unit powers, `exp`/`log`/trig→dimensionless
+    (angle and `%` rescaled), inverse trig→radian-labelled, comparisons→plain
+    bool arrays, `var`→unit², `gradient`/`trapezoid`→unit division/multiplication,
+    and much more.
+  - Fail-loud everywhere: any uncovered ufunc/function, any `out=` argument, and
+    `multiply.reduce` raise `UnsupportedOperationError` naming the operation;
+    units are never silently dropped. `np.array(q)`/`np.asarray(q)` raise with
+    guidance to use `duq.ustrip`, closing the classic silent-strip hole.
+    `float(q)`/`int(q)`/`complex(q)`/`bool(q)` coerce **dimensionless**
+    quantities by applying the unit scale (`float(Quantity(50.0, "%")) == 0.5`;
+    radian-labelled values pass through) and raise for anything dimensional —
+    pint-consistent behaviour.
+  - `Unit` opts out of NumPy's ufunc machinery (`__array_ufunc__ = None`) and
+    scales into a `Quantity` when combined with a number or array, so
+    `np.linspace(0, 1, 5) * duq.units.m`, `5 * duq.units.m`, `duq.units.m * 5`
+    and `array / unit` all yield a `Quantity` (`1 / unit` still inverts the unit).
+  - Array `Quantity` gains `.shape`/`.ndim`/`.size`/`.dtype`/`.T`, `len()`,
+    iteration and indexing (yielding element quantities), `.item()`, and thin
+    `.sum()/.mean()/.std()/.var()/.min()/.max()/.reshape()/.ravel()/.astype()`
+    delegates that route through the same unit rules.
+  - New `duq._numpy` back-end package, imported lazily only from the array hooks,
+    so `import duq` and all scalar arithmetic remain NumPy-free (asserted by CI).
+  - A pixi `test-np126` environment (Python 3.11, NumPy 1.26) plus an Ubuntu CI
+    job guard the NumPy 1.26 ↔ 2.x differences (including the `trapz`/`trapezoid`
+    rename).
 - Complete rewrite of the core as a pure-Python, array-free layer:
   - `Dimension`: an immutable, hashable vector of exact `Fraction` exponents
     over the seven SI base dimensions, with `*`/`/`/`**` algebra and a

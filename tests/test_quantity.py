@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from decimal import Decimal
 from fractions import Fraction
 
@@ -257,12 +258,44 @@ def test_uconvert_ustrip() -> None:
     assert duq.ustrip("cm", Quantity(1.0, "m")) == 100.0
 
 
-def test_array_hooks_raise() -> None:
+def test_dimensionless_scalar_coercions_apply_scale() -> None:
+    # A dimensionless quantity has an unambiguous numeric value once the unit
+    # scale is applied (pint-consistent).
+    assert float(Quantity(0.5, "1")) == 0.5
+    assert float(Quantity(50.0, "%")) == 0.5
+    assert int(Quantity(200.0, "%")) == 2
+    assert float(Quantity(2.0, "ppm")) == 2e-6
+    assert complex(Quantity(50.0, "%")) == 0.5 + 0j
+    # Angle-labelled units are dimensionless in duq's dimension system.
+    assert float(Quantity(1.5, "rad")) == 1.5
+    assert float(Quantity(90.0, "deg")) == pytest.approx(math.pi / 2)
+
+
+def test_dimensionless_bool_follows_magnitude() -> None:
+    assert bool(Quantity(50.0, "%")) is True
+    assert bool(Quantity(0.0, "1")) is False
+    assert bool(Quantity(0.0, "%")) is False
+
+
+def test_dimensional_scalar_coercions_fail_loud() -> None:
+    q = Quantity(2.0, "m")
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        float(q)
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        int(q)
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        complex(q)
+    with pytest.raises(duq.UnsupportedOperationError, match="ustrip"):
+        bool(q)
+
+
+def test_array_hooks_raise_for_unsupported() -> None:
     q = Quantity(1.0, "m")
+    # An unknown ufunc / function has no registered unit rule and must fail loud.
     with pytest.raises(duq.UnsupportedOperationError):
-        q.__array_ufunc__(None, "__call__")
+        q.__array_ufunc__(object(), "__call__", q)
     with pytest.raises(duq.UnsupportedOperationError):
-        q.__array_function__(None, (), (), {})
+        q.__array_function__(len, (), (q,), {})
 
 
 @given(q=sd.quantities(), unit=sd.units())

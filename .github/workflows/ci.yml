@@ -58,6 +58,19 @@ jobs:
       - name: Run tests
         run: pixi run -e ${{ matrix.environment }} test
 
+  test-np126:
+    name: Test with NumPy 1.26 (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.72.0
+          environments: test-np126
+          cache: true
+      - name: Run tests against NumPy 1.26
+        run: pixi run -e test-np126 test
+
   test-jax:
     name: Test with JAX (ubuntu-latest)
     runs-on: ubuntu-latest

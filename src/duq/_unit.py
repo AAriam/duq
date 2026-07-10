@@ -10,20 +10,42 @@ that way; it is never silently collapsed to base SI units (use
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
+from ._arraytypes import is_numpy_magnitude
 from ._dimension import Dimension, _coerce_exponent
 from ._errors import AffineUnitError, RegistryMismatchError
 from ._format import format_composition, order_terms
 
 if TYPE_CHECKING:
+    from ._quantity import Quantity
     from ._registry import UnitRegistry
 
 __all__ = ("Unit",)
 
 Scalar = Fraction | float
 """A scale or offset value: exact when a :class:`~fractions.Fraction`."""
+
+_SCALAR_NUMBERS = (int, float, complex, Fraction, Decimal)
+
+
+def _is_scalar_number(value: object) -> bool:
+    """Return whether ``value`` is a non-bool Python number a unit may scale."""
+    return not isinstance(value, bool) and isinstance(value, _SCALAR_NUMBERS)
+
+
+def _is_magnitude(value: object) -> bool:
+    """Return whether ``value`` may become a :class:`Quantity` magnitude."""
+    return _is_scalar_number(value) or is_numpy_magnitude(value)
+
+
+def _make_quantity(value: object, unit: Unit) -> Quantity:
+    """Build a :class:`Quantity` (imported lazily to avoid an import cycle)."""
+    from ._quantity import Quantity
+
+    return Quantity(value, unit)  # type: ignore[arg-type]
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +129,14 @@ class Unit:
     True
     >>> duq.unit("J") == duq.unit("kg.m^2/s^2")
     True
+
+    Multiplying a unit by a number or a NumPy array scales it into a
+    :class:`~duq.Quantity` (``1 / unit`` still inverts the unit itself):
+
+    >>> (5 * duq.units.m).value
+    5
+    >>> str((1 / duq.unit("s")))
+    's⁻¹'
     """
 
     __slots__ = ("_dimension", "_factors", "_offset", "_registry", "_scale")
@@ -115,6 +145,10 @@ class Unit:
     _dimension: Dimension
     _scale: Scalar
     _offset: Scalar
+
+    #: Opt out of NumPy's ufunc machinery so ``ndarray * unit`` (and ``/``)
+    #: defers to :meth:`__rmul__`/:meth:`__rtruediv__` and yields a Quantity.
+    __array_ufunc__ = None
 
     def __init__(self) -> None:  # pragma: no cover - constructed via _create
         raise TypeError("Unit objects are created by a UnitRegistry, not directly")
@@ -213,18 +247,37 @@ class Unit:
         if other._registry is not self._registry:
             raise RegistryMismatchError("cannot combine units from different registries")
 
-    def __mul__(self, other: object) -> Unit:
-        if not isinstance(other, Unit):
-            return NotImplemented
-        self._check_registry(other)
-        return Unit._create(self._registry, self._factors + other._factors)
+    @overload
+    def __mul__(self, other: Unit) -> Unit: ...  # type: ignore[overload-overlap]
+    @overload
+    def __mul__(self, other: object) -> Quantity: ...
+    def __mul__(self, other: object) -> Unit | Quantity:
+        if isinstance(other, Unit):
+            self._check_registry(other)
+            return Unit._create(self._registry, self._factors + other._factors)
+        if _is_magnitude(other):
+            # ``unit * value`` reads as ``value * unit`` -> a Quantity.
+            return _make_quantity(other, self)
+        return NotImplemented
 
-    def __truediv__(self, other: object) -> Unit:
-        if not isinstance(other, Unit):
-            return NotImplemented
-        self._check_registry(other)
-        inverted = tuple(Factor(f.prefix, f.atom, -f.exponent) for f in other._factors)
-        return Unit._create(self._registry, self._factors + inverted)
+    def __rmul__(self, other: object) -> Quantity:
+        if _is_magnitude(other):
+            return _make_quantity(other, self)
+        return NotImplemented
+
+    @overload
+    def __truediv__(self, other: Unit) -> Unit: ...  # type: ignore[overload-overlap]
+    @overload
+    def __truediv__(self, other: object) -> Quantity: ...
+    def __truediv__(self, other: object) -> Unit | Quantity:
+        if isinstance(other, Unit):
+            self._check_registry(other)
+            inverted = tuple(Factor(f.prefix, f.atom, -f.exponent) for f in other._factors)
+            return Unit._create(self._registry, self._factors + inverted)
+        if _is_magnitude(other):
+            # ``unit / value`` is ``(1 unit) / value``.
+            return _make_quantity(1 / other, self)  # type: ignore[operator]
+        return NotImplemented
 
     def __pow__(self, power: object) -> Unit:
         try:
@@ -234,10 +287,16 @@ class Unit:
         powered = tuple(Factor(f.prefix, f.atom, f.exponent * exp) for f in self._factors)
         return Unit._create(self._registry, powered)
 
-    def __rtruediv__(self, other: object) -> Unit:
-        if other != 1:
-            return NotImplemented
-        return self**-1
+    def __rtruediv__(self, other: object) -> Unit | Quantity:
+        if is_numpy_magnitude(other):
+            # ``array / unit`` -> a Quantity carrying the inverse unit.
+            return _make_quantity(other, self**-1)
+        if _is_scalar_number(other):
+            # ``1 / unit`` inverts the unit itself; other numbers make a Quantity.
+            if other == 1:
+                return self**-1
+            return _make_quantity(other, self**-1)
+        return NotImplemented
 
     # -- equality -----------------------------------------------------------
 

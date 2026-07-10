@@ -41,8 +41,13 @@ def test_reciprocal() -> None:
     assert (1 / duq.unit("s")) == duq.unit("Hz")
 
 
-def test_reciprocal_only_one() -> None:
-    assert duq.unit("s").__rtruediv__(2) is NotImplemented
+def test_reciprocal_one_is_a_unit_other_numbers_a_quantity() -> None:
+    # ``1 / unit`` inverts the unit itself; other numbers scale it into a Quantity.
+    assert isinstance(1 / duq.unit("s"), duq.Unit)
+    two_over_s = duq.unit("s").__rtruediv__(2)
+    assert isinstance(two_over_s, duq.Quantity)
+    assert two_over_s.value == 2
+    assert two_over_s.unit == duq.unit("s^-1")
 
 
 def test_power_and_pow_type_guard() -> None:
@@ -80,9 +85,11 @@ def test_repr() -> None:
 
 
 def test_dunder_notimplemented_for_foreign() -> None:
-    assert duq.unit("m").__mul__(3) is NotImplemented
+    assert duq.unit("m").__mul__("x") is NotImplemented
     assert duq.unit("m").__truediv__("x") is NotImplemented
     assert duq.unit("m").__eq__(3) is NotImplemented
+    # A bool is rejected (it is not a magnitude), like elsewhere in duq.
+    assert duq.unit("m").__mul__(True) is NotImplemented
 
 
 @pytest.mark.parametrize("expression", ["degC^2", "degC.s", "degC^-1", "°C.mol"])
