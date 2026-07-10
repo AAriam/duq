@@ -1,0 +1,148 @@
+# Fundamental physical constants for duq.
+#
+# Values are keyed by CODATA release so that additional years can be added
+# without disturbing existing data.  Each entry carries its value, unit,
+# standard uncertainty ("exact" for defining constants), symbol and name.
+#
+# The 2022 set below is transcribed verbatim from the NIST CODATA 2022
+# recommended values (https://physics.nist.gov/cuu/Constants/).
+
+[codata2022.c]
+name = "speed of light in vacuum"
+symbol = "c"
+value = "299792458"
+unit = "m/s"
+uncertainty = "exact"
+
+[codata2022.h]
+name = "Planck constant"
+symbol = "h"
+value = "6.62607015e-34"
+unit = "J.s"
+uncertainty = "exact"
+
+[codata2022.hbar]
+name = "reduced Planck constant"
+symbol = "ħ"
+value = "1.054571817e-34"
+unit = "J.s"
+uncertainty = "exact"
+
+[codata2022.e]
+name = "elementary charge"
+symbol = "e"
+value = "1.602176634e-19"
+unit = "C"
+uncertainty = "exact"
+
+[codata2022.k_B]
+name = "Boltzmann constant"
+symbol = "k_B"
+value = "1.380649e-23"
+unit = "J/K"
+uncertainty = "exact"
+
+[codata2022.N_A]
+name = "Avogadro constant"
+symbol = "N_A"
+value = "6.02214076e23"
+unit = "1/mol"
+uncertainty = "exact"
+
+[codata2022.R]
+name = "molar gas constant"
+symbol = "R"
+value = "8.314462618"
+unit = "J/(mol.K)"
+uncertainty = "exact"
+
+[codata2022.alpha]
+name = "fine-structure constant"
+symbol = "α"
+value = "7.2973525643e-3"
+unit = "1"
+uncertainty = "0.0000000011e-3"
+
+[codata2022.m_e]
+name = "electron mass"
+symbol = "m_e"
+value = "9.1093837139e-31"
+unit = "kg"
+uncertainty = "0.0000000028e-31"
+
+[codata2022.m_p]
+name = "proton mass"
+symbol = "m_p"
+value = "1.67262192595e-27"
+unit = "kg"
+uncertainty = "0.00000000052e-27"
+
+[codata2022.m_n]
+name = "neutron mass"
+symbol = "m_n"
+value = "1.67492750056e-27"
+unit = "kg"
+uncertainty = "0.00000000085e-27"
+
+[codata2022.u]
+name = "atomic mass constant"
+symbol = "u"
+value = "1.66053906892e-27"
+unit = "kg"
+uncertainty = "0.00000000052e-27"
+
+[codata2022.eps_0]
+name = "vacuum electric permittivity"
+symbol = "ε₀"
+value = "8.8541878188e-12"
+unit = "F/m"
+uncertainty = "0.0000000014e-12"
+
+[codata2022.mu_0]
+name = "vacuum magnetic permeability"
+symbol = "μ₀"
+value = "1.25663706127e-6"
+unit = "N/A^2"
+uncertainty = "0.00000000020e-6"
+
+[codata2022.G]
+name = "Newtonian constant of gravitation"
+symbol = "G"
+value = "6.67430e-11"
+unit = "m^3/(kg.s^2)"
+uncertainty = "0.00015e-11"
+
+[codata2022.g_n]
+name = "standard acceleration of gravity"
+symbol = "g_n"
+value = "9.80665"
+unit = "m/s^2"
+uncertainty = "exact"
+
+[codata2022.sigma_SB]
+name = "Stefan-Boltzmann constant"
+symbol = "σ"
+value = "5.670374419e-8"
+unit = "W/(m^2.K^4)"
+uncertainty = "exact"
+
+[codata2022.R_inf]
+name = "Rydberg constant"
+symbol = "R_∞"
+value = "10973731.568157"
+unit = "1/m"
+uncertainty = "0.000012"
+
+[codata2022.a_0]
+name = "Bohr radius"
+symbol = "a₀"
+value = "5.29177210544e-11"
+unit = "m"
+uncertainty = "0.00000000082e-11"
+
+[codata2022.E_h]
+name = "Hartree energy"
+symbol = "E_h"
+value = "4.3597447222060e-18"
+unit = "J"
+uncertainty = "0.0000000000048e-18"
