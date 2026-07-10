@@ -29,7 +29,7 @@ from ._errors import (
     UnitParseError,
     UnsupportedOperationError,
 )
-from ._quantity import Quantity, uconvert, ustrip
+from ._quantity import Quantity, QuantityLike, uconvert, ustrip
 from ._registry import UnitRegistry, default_registry
 from ._unit import Unit
 
@@ -40,6 +40,7 @@ __all__ = (
     "DimensionalityError",
     "DuqError",
     "Quantity",
+    "QuantityLike",
     "RegistryMismatchError",
     "UndefinedUnitError",
     "Unit",

@@ -40,7 +40,10 @@ classifiers = [
 dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
-jax = ["jax>=0.5"]
+# quax is single-maintainer and on the 0.3.x line (research report Risk #4), so
+# it is pinned with an upper bound; equinox provides the Module/pytree base quax
+# builds on.
+jax = ["jax>=0.5", "quax>=0.3.6,<0.5", "equinox>=0.11"]
 
 [project.urls]
 Repository = "https://github.com/AAriam/duq"
@@ -88,12 +91,24 @@ lint = "ruff check ."
 fmt = "ruff format ."
 fmt-check = "ruff format --check ."
 
+# The type feature includes the JAX stack so mypy --strict can check
+# src/duq/jax and tests/jax; conda-forge ships no win-64 jax, hence the
+# platform restriction (CI type-checks on ubuntu).
+[tool.pixi.feature.type]
+platforms = ["osx-64", "osx-arm64", "linux-64"]
+
 [tool.pixi.feature.type.dependencies]
 mypy = "*"
 numpy = ">=1.26"
+jax = ">=0.5"
+equinox = ">=0.11"
 # Present so mypy can resolve the (typed) test-suite imports under --strict.
 pytest = "*"
 hypothesis = "*"
+packaging = "*"
+
+[tool.pixi.feature.type.pypi-dependencies]
+quax = ">=0.3.6,<0.5"
 
 [tool.pixi.feature.type.tasks]
 typecheck = "mypy"
@@ -104,6 +119,19 @@ platforms = ["osx-64", "osx-arm64", "linux-64"]
 
 [tool.pixi.feature.jax.dependencies]
 jax = ">=0.5"
+# equinox is on conda-forge; quax is not, so it is added below as a PyPI dep.
+equinox = ">=0.11"
+
+[tool.pixi.feature.jax.pypi-dependencies]
+# quax is not packaged on conda-forge, so it comes from PyPI; the upper bound
+# mirrors the pyproject [project.optional-dependencies] jax pin.
+quax = ">=0.3.6,<0.5"
+
+[tool.pixi.feature.jax.tasks]
+# The global coverage gate (95%) omits duq/jax (unimportable without jax);
+# this task runs the whole suite with jax installed and enforces a dedicated
+# >=90% gate on src/duq/jax via its own coverage config.
+test-jax = { cmd = "pytest --cov --cov-config=coverage-jax.toml", default-environment = "test-jax" }
 
 # NumPy 1.26 pin: guards the NEP-13/18 behaviour differences (and the
 # trapz/trapezoid rename) between NumPy 1.26 and 2.x on the minimum Python.
@@ -210,6 +238,9 @@ xfail_strict = true
 [tool.coverage.run]
 source = ["duq"]
 branch = true
+# duq/jax cannot import (or be measured) without the optional jax stack; the
+# test-jax task gates it separately at >=90% via coverage-jax.toml.
+omit = ["*/duq/jax/*"]
 
 [tool.coverage.report]
 show_missing = true

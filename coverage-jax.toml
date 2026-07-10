@@ -1,0 +1,18 @@
+# Coverage configuration for the test-jax task (pixi run -e test-jax test-jax).
+#
+# The global gate in pyproject.toml omits src/duq/jax (unimportable without
+# the optional jax stack); this config measures exactly that package and
+# enforces its own >=90% gate, per the PR-4 coverage policy.
+
+[tool.coverage.run]
+source = ["duq.jax"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 90
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

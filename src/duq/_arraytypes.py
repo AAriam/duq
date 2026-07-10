@@ -18,10 +18,34 @@ if TYPE_CHECKING:
     from types import ModuleType
 
 __all__ = (
+    "is_jax_like",
     "is_numpy_array",
     "is_numpy_magnitude",
     "numpy_if_loaded",
 )
+
+
+def is_jax_like(value: object) -> bool:
+    """Return whether ``value`` looks like a JAX array or tracer, without importing JAX.
+
+    The test is a cheap module-name sniff (``type(value).__module__`` starting
+    with ``"jax"``): a concrete JAX array lives in ``jaxlib._jax`` and a tracer in
+    ``jax._src.*``, both of which start with ``"jax"``, while NumPy arrays
+    (``numpy``) and Python scalars (``builtins``/``fractions``/``decimal``) do
+    not.  This lets the pure core reject JAX magnitudes -- pointing the user at
+    :class:`duq.jax.Quantity` -- without adding a JAX import.
+
+    Parameters
+    ----------
+    value : object
+        The object to test.
+
+    Returns
+    -------
+    bool
+        ``True`` if ``value``'s type is defined in a ``jax``/``jaxlib`` module.
+    """
+    return type(value).__module__.startswith("jax")
 
 
 def numpy_if_loaded() -> ModuleType | None:
