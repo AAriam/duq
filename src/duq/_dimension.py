@@ -158,7 +158,8 @@ class Dimension:
 
         Examples
         --------
-        >>> Dimension.parse("L^3/2") == Dimension({"L": __import__("fractions").Fraction(3, 2)})
+        >>> from fractions import Fraction
+        >>> Dimension.parse("L^3/2") == Dimension({"L": Fraction(3, 2)})
         True
         >>> Dimension.parse("velocity") == Dimension({"L": 1, "T": -1})
         True

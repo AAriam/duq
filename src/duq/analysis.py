@@ -144,10 +144,10 @@ def compositions(
     Examples
     --------
     >>> import duq
+    >>> from fractions import Fraction
     >>> from duq.analysis import compositions
     >>> comps = compositions(duq.dimension("energy"), max_terms=2)
-    >>> {"force": __import__("fractions").Fraction(1),
-    ...  "length": __import__("fractions").Fraction(1)} in comps
+    >>> {"force": Fraction(1), "length": Fraction(1)} in comps
     True
     """
     import numpy as np  # noqa: PLC0415 - lazy: keeps NumPy out of the core import
