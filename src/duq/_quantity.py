@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Protocol, TypeVar, cast, overload
 
 from ._arraytypes import is_jax_like, is_numpy_array, is_numpy_magnitude
 from ._dimension import Dimension, _coerce_exponent
@@ -30,7 +30,7 @@ from ._registry import default_registry
 from ._rules import Rule, apply
 from ._unit import Factor, Unit
 
-__all__ = ("Quantity", "uconvert", "ustrip")
+__all__ = ("Quantity", "QuantityLike", "uconvert", "ustrip")
 
 Number = int | float | complex | Fraction | Decimal
 """The scalar value types accepted by :class:`Quantity`."""
@@ -974,20 +974,50 @@ class Quantity:
         return f"{self._value} {self._unit}"
 
 
-def uconvert(unit: str | Unit, q: Quantity) -> Quantity:
+class QuantityLike(Protocol):
+    """Structural protocol for unit-carrying values.
+
+    Both the core :class:`Quantity` and the JAX-backed
+    :class:`duq.jax.Quantity` satisfy this protocol, so the free functions
+    :func:`uconvert` and :func:`ustrip` dispatch on every quantity flavour
+    without the core ever importing an array library.
+    """
+
+    @property
+    def unit(self) -> Unit:
+        """Return the unit."""
+        ...  # pragma: no cover - protocol stub
+
+    @property
+    def value(self) -> Any:
+        """Return the numeric magnitude."""
+        ...  # pragma: no cover - protocol stub
+
+    def to(self, unit: str | Unit) -> QuantityLike:
+        """Convert to another unit of the same dimension."""
+        ...  # pragma: no cover - protocol stub
+
+
+QuantityT = TypeVar("QuantityT", bound=QuantityLike)
+
+
+def uconvert(unit: str | Unit, q: QuantityT) -> QuantityT:
     """Convert a quantity to a unit (unit-first, JAX-idiomatic).
+
+    Dispatches structurally on any :class:`QuantityLike` value, so it works
+    for the core :class:`Quantity` and for :class:`duq.jax.Quantity` alike.
 
     Parameters
     ----------
     unit : str or Unit
         The target unit.
-    q : Quantity
+    q : Quantity or duq.jax.Quantity
         The quantity to convert.
 
     Returns
     -------
-    Quantity
-        The converted quantity.
+    Quantity or duq.jax.Quantity
+        The converted quantity (same flavour as ``q``).
 
     Examples
     --------
@@ -995,22 +1025,29 @@ def uconvert(unit: str | Unit, q: Quantity) -> Quantity:
     >>> duq.uconvert("cm", duq.Quantity(1.0, "m")).value
     100.0
     """
-    return q.to(unit)
+    return cast("QuantityT", q.to(unit))
 
 
-def ustrip(unit: str | Unit, q: Quantity) -> Magnitude:
+@overload
+def ustrip(unit: str | Unit, q: Quantity) -> Magnitude: ...
+@overload
+def ustrip(unit: str | Unit, q: QuantityLike) -> Any: ...
+def ustrip(unit: str | Unit, q: QuantityLike) -> Any:
     """Return a quantity's magnitude in a unit (unit-first, JAX-idiomatic).
+
+    Dispatches structurally on any :class:`QuantityLike` value, so it works
+    for the core :class:`Quantity` and for :class:`duq.jax.Quantity` alike.
 
     Parameters
     ----------
     unit : str or Unit
         The target unit.
-    q : Quantity
+    q : Quantity or duq.jax.Quantity
         The quantity to strip.
 
     Returns
     -------
-    int, float, complex, fractions.Fraction, decimal.Decimal or numpy.ndarray
+    int, float, complex, fractions.Fraction, decimal.Decimal, numpy.ndarray or jax.Array
         The bare magnitude in ``unit``.
 
     Examples
