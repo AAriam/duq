@@ -82,7 +82,7 @@ huge unit catalog, imperial/US-customary units, or pandas integration today, **p
 | NumPy arrays | ✅ NEP 13/18 wrapper | ✅ | ✅ ndarray subclass | ✅ ndarray subclass |
 | JAX `jit`/`grad`/`vmap` | ✅ native pytree | ❌ | ❌ | ❌ |
 | Fail-loud (never silently drops units) | ✅ everywhere | ⚠️ partial | ⚠️ partial | ⚠️ partial |
-| Exact exponents | ✅ `Fraction` | ❌ float | ❌ float | ❌ float |
+| Exact exponents | ✅ `Fraction` | ❌ float | ✅ sympy rationals | ❌ float |
 | As-entered composition | ✅ | ✅ | ➖ base-collapsed | ✅ |
 | Molar equivalence (`kJ/mol ↔ J`) | ✅ opt-in, built-in | ⚠️ via contexts | ❌ | ⚠️ via equivalencies |
 | Versioned constants (CODATA) | ✅ 2022 | ➖ | ➖ | ✅ |
