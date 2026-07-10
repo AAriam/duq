@@ -93,15 +93,16 @@ _TABLE: dict[Rule, Callable[..., Dimension]] = {
 }
 
 
-def apply(rule: Rule, *dimensions: Dimension) -> Dimension:
-    """Apply a rule to input dimensions and return the output dimension.
+def apply(rule: Rule, *operands: Dimension | Fraction) -> Dimension:
+    """Apply a rule to its operands and return the output dimension.
 
     Parameters
     ----------
     rule : Rule
         The abstract operation to apply.
-    *dimensions : Dimension
-        The operand dimensions (the number depends on the rule).
+    *operands : Dimension or fractions.Fraction
+        The operands.  Most rules take :class:`Dimension` operands; ``POWER``
+        additionally takes a :class:`~fractions.Fraction` exponent.
 
     Returns
     -------
@@ -120,18 +121,18 @@ def apply(rule: Rule, *dimensions: Dimension) -> Dimension:
     >>> apply(Rule.MULTIPLY, length, length) == Dimension({"L": 2})
     True
     """
-    return _TABLE[rule](*dimensions)
+    return _TABLE[rule](*operands)
 
 
-def result_dimension(rule: Rule, *dimensions: Dimension) -> Dimension:
+def result_dimension(rule: Rule, *operands: Dimension | Fraction) -> Dimension:
     """Alias for :func:`apply`, spelled for the array front-ends.
 
     Parameters
     ----------
     rule : Rule
         The abstract operation to apply.
-    *dimensions : Dimension
-        The operand dimensions.
+    *operands : Dimension or fractions.Fraction
+        The operands.
 
     Returns
     -------
@@ -144,4 +145,4 @@ def result_dimension(rule: Rule, *dimensions: Dimension) -> Dimension:
     >>> result_dimension(Rule.PRESERVE, Dimension({"M": 1})) == Dimension({"M": 1})
     True
     """
-    return apply(rule, *dimensions)
+    return apply(rule, *operands)
