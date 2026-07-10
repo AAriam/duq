@@ -257,12 +257,13 @@ def test_uconvert_ustrip() -> None:
     assert duq.ustrip("cm", Quantity(1.0, "m")) == 100.0
 
 
-def test_array_hooks_raise() -> None:
+def test_array_hooks_raise_for_unsupported() -> None:
     q = Quantity(1.0, "m")
+    # An unknown ufunc / function has no registered unit rule and must fail loud.
     with pytest.raises(duq.UnsupportedOperationError):
-        q.__array_ufunc__(None, "__call__")
+        q.__array_ufunc__(object(), "__call__", q)
     with pytest.raises(duq.UnsupportedOperationError):
-        q.__array_function__(None, (), (), {})
+        q.__array_function__(len, (), (q,), {})
 
 
 @given(q=sd.quantities(), unit=sd.units())
