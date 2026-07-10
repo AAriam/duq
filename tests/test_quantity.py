@@ -87,7 +87,20 @@ def test_addition_incompatible_raises() -> None:
 def test_plain_number_only_with_dimensionless() -> None:
     assert (Quantity(0.5, "1") + 0.25).value == 0.75
     assert (1.0 + Quantity(0.5, "1")).value == 1.5
-    assert Quantity(1.0, "m").__add__(2.0) is NotImplemented
+
+
+def test_plain_number_with_dimensional_quantity_raises_clearly() -> None:
+    with pytest.raises(duq.DimensionalityError, match="bare number"):
+        _ = Quantity(1.0, "m") + 2.0
+    with pytest.raises(duq.DimensionalityError, match="bare number"):
+        _ = 2 + Quantity(1.0, "m")
+    with pytest.raises(duq.DimensionalityError, match="bare number"):
+        _ = Quantity(1.0, "m") - 2.0
+    with pytest.raises(duq.DimensionalityError, match="bare number"):
+        _ = 2 - Quantity(1.0, "m")
+    # Non-numeric foreign types still defer via NotImplemented.
+    assert Quantity(1.0, "m").__add__("x") is NotImplemented
+    assert Quantity(1.0, "m").__radd__("x") is NotImplemented
 
 
 def test_affine_matrix() -> None:

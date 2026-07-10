@@ -363,7 +363,13 @@ class Quantity:
             return None
         if isinstance(other, int | float | complex | Fraction | Decimal):
             if not self._unit.is_dimensionless:
-                return None
+                # A bare number has no reflected handler that could succeed,
+                # so fail with a helpful message instead of NotImplemented.
+                raise DimensionalityError(
+                    "cannot add or subtract a bare number and a quantity of "
+                    f"dimension {self.dimension}; only dimensionless "
+                    "quantities accept bare numbers"
+                )
             return Quantity(other, self._unit)
         return None
 
