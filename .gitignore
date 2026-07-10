@@ -146,3 +146,8 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+.DS_Store
+
+# pixi (the pixi.lock file IS committed for reproducibility)
+.pixi/

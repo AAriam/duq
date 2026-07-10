@@ -1,6 +1,217 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+# ---------------------------------------------------------------------------
+# Project metadata (PEP 621 / PEP 639)
+# ---------------------------------------------------------------------------
+[project]
+name = "duq"
+version = "1.0.0.dev0"
+description = "Dimensions, units, and quantities for scientific computing — with unit-carrying NumPy and JAX arrays."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Armin Ariamajd", email = "armin.ariamajd@gmail.com" }]
+keywords = [
+    "units",
+    "dimensional-analysis",
+    "physical-quantities",
+    "unit-conversion",
+    "numpy",
+    "jax",
+    "scientific-computing",
 ]
-build-backend = "setuptools.build_meta"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+jax = ["jax>=0.5"]
+
+[project.urls]
+Repository = "https://github.com/AAriam/duq"
+Issues = "https://github.com/AAriam/duq/issues"
+
+# ---------------------------------------------------------------------------
+# Build backend (hatchling, src layout)
+# ---------------------------------------------------------------------------
+[tool.hatch.build.targets.wheel]
+packages = ["src/duq"]
+
+# ---------------------------------------------------------------------------
+# Pixi workspace (https://pixi.sh) — manages dev/test/CI environments
+# ---------------------------------------------------------------------------
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-64", "osx-arm64", "linux-64", "win-64"]
+
+# Runtime (default) environment: the package plus its runtime dependencies.
+[tool.pixi.dependencies]
+python = ">=3.11"
+numpy = ">=1.26"
+
+# Install the project itself as an editable install into every environment
+# that includes the default feature.
+[tool.pixi.pypi-dependencies]
+duq = { path = ".", editable = true }
+
+# --- Features --------------------------------------------------------------
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+pytest-cov = "*"
+hypothesis = "*"
+
+[tool.pixi.feature.test.tasks]
+test = { cmd = "pytest", default-environment = "test" }
+test-cov = { cmd = "pytest --cov=duq --cov-report=term-missing --cov-report=xml", default-environment = "test" }
+
+[tool.pixi.feature.lint.dependencies]
+ruff = "*"
+pre-commit = "*"
+
+[tool.pixi.feature.lint.tasks]
+lint = "ruff check ."
+fmt = "ruff format ."
+fmt-check = "ruff format --check ."
+
+[tool.pixi.feature.type.dependencies]
+mypy = "*"
+numpy = ">=1.26"
+
+[tool.pixi.feature.type.tasks]
+typecheck = "mypy"
+
+# JAX is restricted to platforms where conda-forge ships it (no win-64).
+[tool.pixi.feature.jax]
+platforms = ["osx-64", "osx-arm64", "linux-64"]
+
+[tool.pixi.feature.jax.dependencies]
+jax = ">=0.5"
+
+# Python-version pin features for the test matrix.
+[tool.pixi.feature.py311.dependencies]
+python = "3.11.*"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
+# --- Environments ----------------------------------------------------------
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+test-jax = { features = ["test", "jax"] }
+lint = { features = ["lint"], no-default-feature = true }
+# Type-check against the minimum supported Python (matches mypy's python_version).
+type = { features = ["type", "py311"], no-default-feature = true }
+test-py311 = { features = ["test", "py311"] }
+test-py312 = { features = ["test", "py312"] }
+test-py313 = { features = ["test", "py313"] }
+test-py314 = { features = ["test", "py314"] }
+
+# ---------------------------------------------------------------------------
+# Ruff (lint + format)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 99
+target-version = "py311"
+# The `src/duq` package is legacy code that is being rewritten in a follow-up
+# PR; exclude it (and the demo notebooks) from linting/formatting for now so
+# this scaffolding change does not touch source logic.
+extend-exclude = ["src/duq", "docs"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    "PT",  # flake8-pytest-style
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "PTH", # flake8-use-pathlib
+    "PL",  # pylint
+    "RUF", # ruff-specific rules
+    "D",   # pydocstyle
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "PL"]
+
+# ---------------------------------------------------------------------------
+# mypy
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/duq", "tests"]
+mypy_path = ["src"]
+explicit_package_bases = true
+namespace_packages = true
+warn_unused_configs = true
+
+# Legacy package: type-checked properly in the follow-up rewrite PR.
+[[tool.mypy.overrides]]
+module = "duq.*"
+ignore_errors = true
+
+# Tests are not held to strict typing yet (they carry no annotations and call
+# into the legacy, untyped `duq` package).
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+xfail_strict = true
+
+# ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["duq"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
