@@ -105,6 +105,12 @@ platforms = ["osx-64", "osx-arm64", "linux-64"]
 [tool.pixi.feature.jax.dependencies]
 jax = ">=0.5"
 
+# NumPy 1.26 pin: guards the NEP-13/18 behaviour differences (and the
+# trapz/trapezoid rename) between NumPy 1.26 and 2.x on the minimum Python.
+[tool.pixi.feature.np126.dependencies]
+python = "3.11.*"
+numpy = "1.26.*"
+
 # Python-version pin features for the test matrix.
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
@@ -126,6 +132,7 @@ test-jax = { features = ["test", "jax"] }
 lint = { features = ["lint"], no-default-feature = true }
 # Type-check against the minimum supported Python (matches mypy's python_version).
 type = { features = ["type", "py311"], no-default-feature = true }
+test-np126 = { features = ["test", "np126"] }
 test-py311 = { features = ["test", "py311"] }
 test-py312 = { features = ["test", "py312"] }
 test-py313 = { features = ["test", "py313"] }
@@ -167,6 +174,15 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "PL"]
+# The NumPy back-end is imported lazily throughout these two modules (inside the
+# array hooks and array helpers) so that the pure core never imports NumPy;
+# PLC0415 (import-not-at-top-level) is the intended pattern here, not a smell.
+"src/duq/_quantity.py" = ["PLC0415"]
+"src/duq/_unit.py" = ["PLC0415"]
+# The __array_function__ handlers branch on NumPy positional-argument counts
+# (``len(args) > 2`` etc.); those small integers are argument positions, not
+# magic domain constants, so PLR2004 is noise here.
+"src/duq/_numpy/_functions.py" = ["PLR2004"]
 
 # ---------------------------------------------------------------------------
 # mypy
